@@ -1,0 +1,12 @@
+---
+documentclass: article
+classoption:
+    - a4paper
+title: Swarm Particle Optimization
+author: Riccardo Massidda 
+institute: Università di Pisa
+# abstrat: bla-bla
+header-includes:
+ - \usepackage{fvextra}
+ - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+...
