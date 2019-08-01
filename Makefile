@@ -7,11 +7,11 @@ relazione: relazione.md relazione.yaml
 	pandoc ${BIB} ${STYLE} -o $@.pdf $^
 
 clean:
-	rm -rf relazione.pdf $(RELEASE)
+	rm -rf relazione.pdf $(RELEASE) $(RELEASE).tar.gz
 
 dist: relazione
 	mkdir -p $(RELEASE)
-	cp -R relazione.pdf *.cpp *.hpp $(RELEASE)
+	cp -r relazione.pdf $(RELEASE)
 	tar -cf $(RELEASE).tar $(RELEASE)
 	gzip $(RELEASE).tar
 	rm -rf $(RELEASE)
