@@ -55,28 +55,36 @@ Pipe (
 
 # Performance model
 
-The expected sequential time is:
+Given $n$ as the number of particles and $m$ the number of iterations to compute, the expected sequential time is:
 
 $$
-T_{seq} = 2 ( T_{vel} + T_{pos} ) + T_f + T_{loc}
+T_{seq} = m * ( n ( 2 T_{vel} + 2 T_{pos} + T_{f} + T_{min} ) + T_{min} )
 $$
 
-After the vectorization and the pipeline introduction the latency and the service time should vary like this:
+As previously discussed, the $m$ factor can't be exploited via parallelization, so the performance analysis could be done referencing only the internal loop used to compute a certain state.
+
+In the sequential case this takes:
 
 $$
-L = T_{vel} + T_{pos} + T_f + T_{loc}
-$$
-$$
-T_s = max ( T_{vel} , T_{pos} , T_f , T_{loc} )
+T_{c} = n ( 2 T_{vel} + 2 T_{pos} + T_{f} + T_{min} ) + T_{min}
 $$
 
-The farm introduction with *nw* workers should be able to increment the inner loop metrics:
+After the vectorization and the internal pipeline introduction the latency and the service time should vary like this:
 
 $$
-L = \frac{T_{vel} + T_{pos} + T_f + T_{loc}}{nw}
+L = T_{vel} + T_{pos} + T_{f} + T_{min} + T_{min}
 $$
 $$
-T_s = \frac{max ( T_{vel} , T_{pos} , T_f , T_{loc} )}{nw}
+T_s = max ( T_{vel} , T_{pos} , T_{f} , T_{min} )
+$$
+$$
+T_{c} \approx n * T_{s}
+$$
+
+The farm introduction with $n_{w}$ workers is useful to hopefully reduce the service time of an $n_{w}$ factor, leading to a completion time of:
+
+$$
+T_{c} \approx \frac{ n * T_{s} }{ n_{w} }
 $$
 
 # Implementation details
