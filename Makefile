@@ -1,4 +1,9 @@
 # swarm particle optimization
+CXX             = clang++ -std=c++17
+# INCLUDES        = -I $(FF_ROOT) 
+CXXFLAGS        = -Wall
+LDFLAGS         = -pthread
+OPTFLAGS        = -O3 -finline-functions -DNDEBUG -g
 
 RELEASE = spo-530766
 # BIB = --bibliography fonti.bib
@@ -6,8 +11,11 @@ RELEASE = spo-530766
 relazione: relazione.md relazione.yaml
 	pandoc ${BIB} ${STYLE} -o $@.pdf $^
 
+spo: spo.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $< $(LDFLAGS)
+
 clean:
-	rm -rf relazione.pdf $(RELEASE) $(RELEASE).tar.gz
+	rm -rf relazione.pdf $(RELEASE) $(RELEASE).tar.gz spo
 
 dist: relazione
 	mkdir -p $(RELEASE)
