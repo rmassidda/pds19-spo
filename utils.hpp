@@ -13,8 +13,6 @@ class queue
     std::condition_variable d_condition;
     std::deque<T>           d_queue;
   public:
-    auto my_queue() {}
-
     void push(T const &value) {
       {
         std::unique_lock<std::mutex> lock(this->d_mutex);
