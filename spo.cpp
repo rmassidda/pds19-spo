@@ -4,7 +4,7 @@
 #include <cmath>
 
 #include "spo.hpp"
-#include "utimer.cpp"
+#include "utimer.hpp"
 
 void usage ( char * name ) { 
   fprintf ( stderr, "Usage: %s seed n n_iter n_w\n", name );
@@ -45,15 +45,17 @@ int main ( int argc, char ** argv ) {
     p.update ( glb_min, a, b, c, f );
   };
 
-  // Init particle set
+  // Init pseudorandom generator
   srand ( seed );
+
+  // Init particle set
   std::vector<Particle> particles;
   for ( int i = 0; i < n; i ++ ) {
     particles.push_back ( Particle ( f ) );
   }
 
   // Init first global position
-  Result glb_min ( particles[0].current );
+  Result glb_min;
   for ( int j = 0; j < n; j ++ ) {
     glb_min = op ( glb_min, particles[j].local_min );
   }

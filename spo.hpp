@@ -1,3 +1,5 @@
+#ifndef SPO_HPP
+#define SPO_HPP
 #include <iostream>
 #include <functional>
 #include <memory>
@@ -11,6 +13,15 @@ class Result {
   public:
     float position[MAX_DIM];
     float value;
+
+    // Default constructor
+    Result () {
+      for ( int i = 0; i < MAX_DIM; i ++ ) {
+        position[i] = rnd();
+      }
+      value = std::numeric_limits<float>::infinity();
+    }
+
 
     // constructor in point
     Result ( const float x, const float y ) {
@@ -89,3 +100,4 @@ struct Particle {
       return local_min;
     }
 };
+#endif
