@@ -3,36 +3,8 @@
 #include <vector>
 #include <cmath>
 
-#define MAX_DIM 2
-
-struct result {
-  float position[MAX_DIM];
-  float value;
-};
-
-typedef struct result result_t;
-
-struct particle {
-  result_t current;
-  result_t local_min;
-  float velocity[MAX_DIM];
-};
-
-typedef struct particle particle_t;
-
-void copy_result ( result_t& to, result_t from ) {
-  for ( int i = 0; i < MAX_DIM; i ++ ) {
-    to.position[i] = from.position[i];
-  }
-  to.value = from.value;
-}
-
-void print_result ( FILE * file, result_t r ) {
-  fprintf ( file, "( %.4f, %.4f ) -> %.4f\n",
-      r.position[0],
-      r.position[1],
-      r.value );
-}
+#include "spo.hpp"
+#include "utimer.cpp"
 
 void usage ( char * name ) { 
   fprintf ( stderr, "Usage: %s seed n n_iter n_w\n", name );
@@ -58,94 +30,45 @@ int main ( int argc, char ** argv ) {
   const float a = 1;
   const float b = 1;
   const float c = 1;
-  result_t global_min;
 
-  // Functions needed
-  auto update_velocity = [a,b,c,&global_min](particle_t& p){
-    // Random values
-    std::pair<float,float> r;
-
-    for ( int i = 0; i < MAX_DIM; i ++ ) {
-      r.first = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-      r.second = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-      p.velocity[i] =
-        a * p.velocity[i] +
-        r.first * b * ( p.local_min.position[i] - p.current.position[i] ) +
-        r.second * c * ( global_min.position[i] - p.current.position[i] );
-    }
-  };
-
-  auto update_position = []( particle_t& p ) {
-    for ( int i = 0; i < MAX_DIM; i ++ ) {
-      p.current.position[i] += p.velocity[i];
-    }
-  };
-
+  // Real function to minimize
   auto f = [] ( float x, float y ) {
     return std::fabs ( x + y );
   };
 
-  auto update_value = [f] ( particle_t& p ) {
-    p.current.value = f (
-        p.current.position[0],
-        p.current.position[1]);
+  // Comparison operator
+  auto op = [] ( Result a, Result b ) {
+    return ( a.value < b.value ) ? a : b;
   };
 
-  auto update_local = [] ( particle_t& p ) {
-    if ( p.current.value < p.local_min.value ) {
-      p.local_min.value = p.current.value;
-      for ( int i = 0; i < MAX_DIM; i ++ ) {
-        p.local_min.position[i] = p.current.position[i];
-      }
-    }
-  };
-
-  auto update_global = [&global_min] ( result_t r ) {
-    if ( r.value < global_min.value ) {
-      global_min.value = r.value;
-      for ( int i = 0; i < MAX_DIM; i ++ ) {
-        global_min.position[i] = r.position[i];
-      }
-    }
+  auto update = [a,b,c,f] ( Particle& p, const Result glb_min ) {
+    p.update ( glb_min, a, b, c, f );
   };
 
   // Init particle set
   srand ( seed );
-  auto particles = std::vector<particle_t>(n);
-
-  for ( int j = 0; j < n; j ++ ) {
-    // Initialize current result
-    for ( int i = 0; i < MAX_DIM; i ++ ) {
-      particles[j].current.position[i] = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-      particles[j].velocity[i] = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-    }
-    // Compute f value in the position
-    update_value ( particles[j] );
-    // The only result is the local minimum
-    copy_result ( particles[j].local_min, particles[j].current );
+  std::vector<Particle> particles;
+  for ( int i = 0; i < n; i ++ ) {
+    particles.push_back ( Particle ( f ) );
   }
 
-  // Compute first global minimum
-  copy_result ( global_min, particles[0].current );
+  // Init first global position
+  Result glb_min ( particles[0].current );
   for ( int j = 0; j < n; j ++ ) {
-    update_global ( particles[j].local_min );
+    glb_min = op ( glb_min, particles[j].local_min );
   }
-  printf ( "GLB> " );
-  print_result ( stdout, global_min );
 
   // Sequential version
   if ( nw == 0 ) {
+    auto u = utimer ( "sequential" );
     for ( int i = 0; i < n_iter; i ++ ) {
       // Compute local minimums
       for ( int j = 0; j < n; j ++ ) {
-        update_velocity ( particles[j] );
-        update_position ( particles[j] );
-        update_value ( particles[j] );
-        update_local ( particles[j] );
+        update ( particles[j], glb_min );
       }
       // Update global minimum
       for ( int j = 0; j < n; j ++ ) {
-        update_global ( particles[j].local_min );
+        glb_min = op ( glb_min, particles[j].local_min );
       }
     }
   }
@@ -155,7 +78,7 @@ int main ( int argc, char ** argv ) {
 
   // Print of the result
   printf ( "GLB> " );
-  print_result ( stdout, global_min );
+  glb_min.print_result ( stdout );
 
   return 0;
 }
