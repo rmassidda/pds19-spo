@@ -81,8 +81,7 @@ int main ( int argc, char ** argv ) {
     auto u = utimer ( "map-reduce" );
     MapReduce<Particle,Result> mr ( particles, op, nw );
     for ( int i = 0; i < n_iter; i ++ ) {
-      Result best = mr.compute ( update );
-      glb_min = op ( glb_min, best );
+      glb_min = mr.compute ( update );
     }
   }
 
