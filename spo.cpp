@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "spo.hpp"
+#include "mapreduce.hpp"
 #include "utimer.hpp"
 
 void usage ( char * name ) { 
@@ -41,10 +42,6 @@ int main ( int argc, char ** argv ) {
     return ( a.value < b.value ) ? a : b;
   };
 
-  auto update = [a,b,c,f] ( Particle& p, const Result glb_min ) {
-    p.update ( glb_min, a, b, c, f );
-  };
-
   // Init pseudorandom generator
   srand ( seed );
 
@@ -60,13 +57,18 @@ int main ( int argc, char ** argv ) {
     glb_min = op ( glb_min, particles[j].local_min );
   }
 
+  // Closure to update the value of a particle
+  auto update = [a,b,c,f,&glb_min] ( Particle& p ) {
+    return p.update ( glb_min, a, b, c, f );
+  };
+
   // Sequential version
   if ( nw == 0 ) {
     auto u = utimer ( "sequential" );
     for ( int i = 0; i < n_iter; i ++ ) {
       // Compute local minimums
       for ( int j = 0; j < n; j ++ ) {
-        update ( particles[j], glb_min );
+        update ( particles[j] );
       }
       // Update global minimum
       for ( int j = 0; j < n; j ++ ) {
@@ -76,6 +78,12 @@ int main ( int argc, char ** argv ) {
   }
   // Parallel version
   else {
+    auto u = utimer ( "map-reduce" );
+    MapReduce<Particle,Result> mr ( particles, op, nw );
+    for ( int i = 0; i < n_iter; i ++ ) {
+      Result best = mr.compute ( update );
+      glb_min = op ( glb_min, best );
+    }
   }
 
   // Print of the result
