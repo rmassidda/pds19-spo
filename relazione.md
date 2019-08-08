@@ -9,11 +9,10 @@ while not termination:
     p.update_value ( user_function )
     if p < p.local_min:
       p.local_min = p
-      if p < tmp_glb_min:
-        tmp_glb_min = p
 
-  if tmp_glb_min < global_min:
-    global_min = tmp_glb_min
+  for p in particles:
+    if p.local_min < global_min:
+      global_min = p.local_min
 ```
 
 The algorithm execution consists of a number of iterations determined by a certain termination condition, for the sake of simplicity this is a integer provided by the user.
@@ -65,10 +64,10 @@ The performance could benefit so of a **farm introduction**.
 
 # Performance model
 
-Given $n$ as the number of particles and $m$ the number of iterations to compute, the expected sequential time is:
+Given $n$ as the number of particles and $m$ the number of total iterations to compute, the expected sequential time is:
 
 $$
-T_{seq} = m * ( n ( 2 T_{vel} + 2 T_{pos} + T_{f} + T_{min} ) + T_{min} )
+T_{\textrm{seq}} = m * n ( T_{v} + T_{p} + T_{f} + 2 T_{m} )
 $$
 
 As previously discussed, the $m$ factor can't be exploited via parallelization, so the performance analysis could be done referencing only the internal loop used to compute a certain state.
@@ -76,25 +75,25 @@ As previously discussed, the $m$ factor can't be exploited via parallelization, 
 In the sequential case this takes:
 
 $$
-T_{c} = n ( 2 T_{vel} + 2 T_{pos} + T_{f} + T_{min} ) + T_{min}
+T_{\textrm{seq}} = n ( T_{v} + T_{p} + T_{f} + 2 T_{m} )
 $$
 
-After the vectorization and the internal pipeline introduction the latency and the service time should vary like this:
+## Comparison
 
 $$
-L = T_{vel} + T_{pos} + T_{f} + T_{min} + T_{min}
+T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + T_m \lceil \log_2{n_w} \rceil
 $$
 $$
-T_s = max ( T_{vel} , T_{pos} , T_{f} , T_{min} )
+L = T_v + T_p + T_f + 2 T_m
 $$
 $$
-T_{c} \approx n * T_{s}
+T_s = \max ( T_v , T_p , T_f , T_m )
 $$
-
-The farm introduction with $n_{w}$ workers is useful to hopefully reduce the service time of an $n_{w}$ factor, leading to a completion time of:
-
 $$
-T_{c} \approx \frac{ n * T_{s} }{ n_{w} }
+T_{\textrm{Pipe}} \approx n * T_{s} = n * \max ( T_v , T_p , T_f , T_m )
+$$
+$$
+T_{\textrm{PipeFarm}} \approx n * \max ( T_v , T_p , \frac{T_f}{n_w} , T_m )
 $$
 
 # Implementation details
