@@ -34,7 +34,7 @@ int main ( int argc, char ** argv ) {
 
   // Real function to minimize
   auto f = [] ( float x, float y ) {
-    return std::fabs ( x + y );
+    return  ( sqrtf ( std::fabs ( x ) ) + pow ( y, 10 ) ) * sqrtf ( std::fabs ( x * y ) );
   };
 
   // Comparison operator
@@ -51,12 +51,12 @@ int main ( int argc, char ** argv ) {
     particles->push_back ( Particle ( f ) );
   }
 
-  // Debug initial particles
-  printf ( "Initial particles\n" );
-  for ( int i = 0; i < n; i ++ ) {
-    (*particles)[i].current.print_result(stdout);
-  }
-  fflush ( stdout );
+  // // Debug initial particles
+  // printf ( "Initial particles\n" );
+  // for ( int i = 0; i < n; i ++ ) {
+  //   (*particles)[i].current.print_result(stdout);
+  // }
+  // fflush ( stdout );
 
   // Init first global position
   Result glb_min;
@@ -88,11 +88,11 @@ int main ( int argc, char ** argv ) {
   // Parallel version
   else {
     auto u = utimer ( "map-reduce" );
-    // MapReduce<Particle,Result> mr ( particles, nw );
-    // for ( int i = 0; i < n_iter; i ++ ) {
-    //   glb_min = mr.compute ( update, op );
-    // }
-    // mr.stop();
+    MapReduce<Particle,Result> mr ( particles->size(), nw );
+    for ( int i = 0; i < n_iter; i ++ ) {
+      glb_min = mr.compute ( particles, update, op );
+    }
+    mr.stop();
   }
 
   // Print of the result

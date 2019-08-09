@@ -14,36 +14,43 @@
 
 template<typename Tin,typename Tout>
 class MapReduce {
-  using command_t = std::pair<std::function<Tout(Tin&)>,int>;
+  using command_t = std::pair<std::function<Tout(Tin&)>,std::shared_ptr<std::vector<Tin>>>;
   private:
-    std::vector<Tin> map_input;
     queue<Tout> map_output;
+    int n;
     int nw;
     std::vector<std::unique_ptr<std::thread>> mtids;
     std::vector<queue<command_t>> mqids;
 
   public:
     MapReduce(
-      std::vector<Tin> map_input,
+      int n,
       int nw ) :
-      map_input ( map_input ),
+      n ( n ),
       nw ( nw ),
       mtids ( nw ),
       mqids ( nw )
   {
     // Alocate output vector
-    int max_size = map_input.size ();
-    int chunk_size = max_size / nw;
-    chunk_size = ( chunk_size == 0 ) ? max_size : chunk_size;
+    int chunk_size = n / nw;
+    chunk_size = ( chunk_size == 0 ) ? n : chunk_size;
 
     auto worker = [&] ( queue<command_t> * q, queue<Tout> * t, int start, int end ) {
       while ( true ) {
-        auto f = q->pop ();
-        if ( f.second == EOS ) {
+        // Pop the pair
+        auto p = q->pop ();
+        // Function
+        auto f = p.first;
+        // Vector pointer
+        auto v = p.second;
+        if ( v == nullptr ) {
           return;
         }
         for ( int i = start; i < end; i ++ ) {
-          t->push ( f.first ( map_input[i] ) );
+          // printf ( "%d> ", i ); fflush ( stdout );
+          // (*v)[i].current.print_result( stdout ); fflush ( stdout );
+          auto z = f ( (*v)[i] );
+          t->push ( z );
         }
       }
     };
@@ -51,20 +58,20 @@ class MapReduce {
     for ( int i = 0; i < nw; i ++ ) {
       // Define responsability of the worker
       int start = i * chunk_size;
-      int end = ( i == ( nw - 1 ) ) ? max_size : ( i + 1 ) * chunk_size;
+      int end = ( i == ( nw - 1 ) ) ? n : ( i + 1 ) * chunk_size;
       mtids[i] = std::make_unique<std::thread> ( worker, &mqids[i], &map_output, start, end );
     }
 
   }
 
-    Tout compute ( std::function<Tout(Tin&)> f, std::function<Tout(Tout,Tout)> op ) {
+    Tout compute ( std::shared_ptr<std::vector<Tin>> v, std::function<Tout(Tin&)> f, std::function<Tout(Tout,Tout)> op ) {
       // Start threads
       for ( int i = 0; i < nw; i ++ ) {
-        mqids[i].push(std::make_pair( f, GO ));
+        mqids[i].push(std::make_pair( f, v ));
       }
       // Wait the end of the computation
       Tout glb_min = map_output.pop ();
-      for ( int i = 1; i < map_input.size(); i ++ ) {
+      for ( int i = 1; i < n; i ++ ) {
         Tout tmp = map_output.pop ();
         glb_min = op ( tmp, glb_min );
       }
@@ -75,7 +82,7 @@ class MapReduce {
     void stop () {
       auto f = [](Tin& x){Tout y; return y;};
       for ( int i = 0; i < nw; i ++ ) {
-        mqids[i].push(std::make_pair( f, EOS ));
+        mqids[i].push(std::make_pair( f, nullptr ));
       }
       for ( int i = 0; i < nw; i ++ ) {
         mtids[i]->join ();
