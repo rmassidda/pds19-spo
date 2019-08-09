@@ -53,11 +53,11 @@ class MapReduce {
         if ( p == EOS ) {
           return;
         }
+        Tout tmp = ref;
         for ( int i = start; i < end; i ++ ) {
-          // printf ( "%d[%d,%d)> ", i, start, end ); fflush ( stdout );
-          // print_result( stdout, (*this->input)[i].cur ); fflush ( stdout );
-          this->result_q.push ( this->f ( (*this->input)[i], ref ) );
+          tmp = this->op ( tmp, this->f ( (*this->input)[i], ref ) );
         }
+        this->result_q.push ( tmp );
       }
     };
 
@@ -80,8 +80,8 @@ class MapReduce {
     for ( int i = 0; i < nw; i ++ ) {
       work_q[i].push( GO );
     }
-    // // Barrier
-    for ( int i = 0; i < n; i ++ ) {
+    // Barrier
+    for ( int i = 0; i < nw; i ++ ) {
       ref = op ( result_q.pop(), ref );
     }
     return ref;
