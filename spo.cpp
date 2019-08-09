@@ -38,37 +38,55 @@ int main ( int argc, char ** argv ) {
   };
 
   // Comparison operator
-  auto op = [] ( Result a, Result b ) {
-    return ( a.value < b.value ) ? a : b;
+  auto op = [] ( result_t a, result_t b ) {
+    return ( a.val < b.val ) ? a : b;
   };
 
   // Init pseudorandom generator
   srand ( seed );
 
   // Init particle set
-  auto particles = std::make_shared<std::vector<Particle>>();
+  auto p = std::vector<particle_t>(n);
   for ( int i = 0; i < n; i ++ ) {
-    particles->push_back ( Particle ( f ) );
+    init_particle ( p[i] );
+    p[i].cur.val = f ( p[i].cur.pos[0], p[i].cur.pos[1] );
+    p[i].loc.val = p[i].cur.val;
   }
 
-  // // Debug initial particles
-  // printf ( "Initial particles\n" );
-  // for ( int i = 0; i < n; i ++ ) {
-  //   (*particles)[i].current.print_result(stdout);
-  // }
-  // fflush ( stdout );
+  // Debug initial particles
+  printf ( "Initial particles\n" );
+  for ( int i = 0; i < n; i ++ ) {
+    print_result ( stdout, p[i].cur );
+  }
 
   // Init first global position
-  Result glb_min;
-  for ( int j = 0; j < n; j ++ ) {
-    glb_min = op ( glb_min, (*particles)[j].local_min );
+  result_t glb_min = p[0].loc;
+  for ( int i = 0; i < n; i ++ ) {
+    glb_min = op ( glb_min, p[i].loc );
   }
 
+  printf ( "GLB> " );
+  print_result ( stdout, glb_min );
+
   // Closure to update the value of a particle
-  auto update = [a,b,c,f,&glb_min] ( Particle& p ) {
-    // glb_min.print_result ( stdout );
-    // fflush ( stdout );
-    return p.update ( glb_min, a, b, c, f );
+  auto update = [a,b,c,f,op] ( particle_t& p, const result_t glb_min ) {
+    // Velocity update
+    float loc_dist[MAX_DIM];
+    float glb_dist[MAX_DIM];
+    for ( int i = 0; i < MAX_DIM; i ++ ) {
+      loc_dist[i] = p.loc.pos[i] - p.cur.pos[i];
+      glb_dist[i] = glb_min.pos[i] - p.cur.pos[i];
+    }
+    update_vel ( p.vel, loc_dist, glb_dist, a, b, c );
+
+    // Position update
+    update_pos ( p.cur.pos, p.vel );
+
+    // Value update
+    p.cur.val = f ( p.cur.pos[0], p.cur.pos[1] );
+
+    // Local minimum update
+    p.loc = op ( p.cur, p.loc );
   };
 
   // Sequential version
@@ -77,27 +95,29 @@ int main ( int argc, char ** argv ) {
     for ( int i = 0; i < n_iter; i ++ ) {
       // Compute local minimums
       for ( int j = 0; j < n; j ++ ) {
-        update ( (*particles)[j] );
+        update ( p[j], glb_min );
       }
       // Update global minimum
       for ( int j = 0; j < n; j ++ ) {
-        glb_min = op ( glb_min, (*particles)[j].local_min );
+        glb_min = op ( glb_min, p[j].loc );
       }
     }
   }
   // Parallel version
   else {
-    auto u = utimer ( "map-reduce" );
-    MapReduce<Particle,Result> mr ( particles->size(), nw );
-    for ( int i = 0; i < n_iter; i ++ ) {
-      glb_min = mr.compute ( particles, update, op );
-    }
-    mr.stop();
+    // auto u = utimer ( "map-reduce" );
+    // MapReduce<particle_t,result_t> mr ( p, nw, update, op );
+    // MapReduce<Particle,Result> mr ( particles->size(), nw );
+    // for ( int i = 0; i < n_iter; i ++ ) {
+    //   glb_min = mr.compute ( p, glb_min );
+    //   glb_min = mr.compute ( particles, update, op );
+    // }
+    // mr.stop();
   }
 
   // Print of the result
   printf ( "GLB> " );
-  glb_min.print_result ( stdout );
+  print_result ( stdout, glb_min );
 
   return 0;
 }
