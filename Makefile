@@ -1,5 +1,5 @@
 # swarm particle optimization
-CXX             = clang++ -std=c++17
+CXX             = g++ -std=c++17
 # INCLUDES        = -I $(FF_ROOT) 
 CXXFLAGS        = -Wall
 LDFLAGS         = -pthread
