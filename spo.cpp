@@ -46,19 +46,28 @@ int main ( int argc, char ** argv ) {
   srand ( seed );
 
   // Init particle set
-  std::vector<Particle> particles;
+  auto particles = std::make_shared<std::vector<Particle>>();
   for ( int i = 0; i < n; i ++ ) {
-    particles.push_back ( Particle ( f ) );
+    particles->push_back ( Particle ( f ) );
   }
+
+  // Debug initial particles
+  printf ( "Initial particles\n" );
+  for ( int i = 0; i < n; i ++ ) {
+    (*particles)[i].current.print_result(stdout);
+  }
+  fflush ( stdout );
 
   // Init first global position
   Result glb_min;
   for ( int j = 0; j < n; j ++ ) {
-    glb_min = op ( glb_min, particles[j].local_min );
+    glb_min = op ( glb_min, (*particles)[j].local_min );
   }
 
   // Closure to update the value of a particle
   auto update = [a,b,c,f,&glb_min] ( Particle& p ) {
+    // glb_min.print_result ( stdout );
+    // fflush ( stdout );
     return p.update ( glb_min, a, b, c, f );
   };
 
@@ -68,22 +77,22 @@ int main ( int argc, char ** argv ) {
     for ( int i = 0; i < n_iter; i ++ ) {
       // Compute local minimums
       for ( int j = 0; j < n; j ++ ) {
-        update ( particles[j] );
+        update ( (*particles)[j] );
       }
       // Update global minimum
       for ( int j = 0; j < n; j ++ ) {
-        glb_min = op ( glb_min, particles[j].local_min );
+        glb_min = op ( glb_min, (*particles)[j].local_min );
       }
     }
   }
   // Parallel version
   else {
     auto u = utimer ( "map-reduce" );
-    MapReduce<Particle,Result> mr ( particles, nw );
-    for ( int i = 0; i < n_iter; i ++ ) {
-      glb_min = mr.compute ( update, op );
-    }
-    mr.stop();
+    // MapReduce<Particle,Result> mr ( particles, nw );
+    // for ( int i = 0; i < n_iter; i ++ ) {
+    //   glb_min = mr.compute ( update, op );
+    // }
+    // mr.stop();
   }
 
   // Print of the result
