@@ -72,7 +72,7 @@ class MapReduce {
       return glb_min;
     }
 
-    ~MapReduce () {
+    void stop () {
       auto f = [](Tin& x){Tout y; return y;};
       for ( int i = 0; i < nw; i ++ ) {
         mqids[i].push(std::make_pair( f, EOS ));

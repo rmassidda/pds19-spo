@@ -83,6 +83,7 @@ int main ( int argc, char ** argv ) {
     for ( int i = 0; i < n_iter; i ++ ) {
       glb_min = mr.compute ( update, op );
     }
+    mr.stop();
   }
 
   // Print of the result
