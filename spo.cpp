@@ -1,20 +1,21 @@
+#include <cmath>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <cmath>
 
 #include "spo.hpp"
 #include "mapreduce.hpp"
 #include "utimer.hpp"
 
 void usage ( char * name ) { 
-  fprintf ( stderr, "Usage: %s seed n n_iter n_w\n", name );
+  fprintf ( stderr, "Usage: %s seed n n_iter n_w delay\n", name );
   exit ( EXIT_FAILURE );
 }
 
 int main ( int argc, char ** argv ) {
   // User arguments
-  if ( argc != 5 ) {
+  if ( argc != 6 ) {
     usage ( argv[0] );
   }
   
@@ -22,6 +23,7 @@ int main ( int argc, char ** argv ) {
   auto n      = atoi ( argv[2] );
   auto n_iter = atoi ( argv[3] );
   auto nw     = atoi ( argv[4] );
+  auto delay  = std::chrono::microseconds( atoi ( argv[5] ) );
 
   // Check legal values
   if ( n <= 0 || n_iter <= 0 || nw < 0 ) {
@@ -33,8 +35,8 @@ int main ( int argc, char ** argv ) {
   const float c = 1;
 
   // Real function to minimize
-  auto f = [] ( float x, float y ) {
-    // return pow(pow(sqrtf(std::fabs(x)) + pow(cos(x*y),sin(sqrtf(std::fabs(x)))) * sqrtf(std::fabs(sin(x)*sin(-y))),4),-1/3);
+  auto f = [delay] ( float x, float y ) {
+    std::this_thread::sleep_for(delay);
     return std::fabs ( x + y );
   };
 
