@@ -1,28 +1,26 @@
+#ifndef MPR_HPP
+#define MPR_HPP
 #include <iostream>
-#include <utility>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <functional>
-#include <map>
-#include <iostream>
-#include <thread>
 #include <queue>
-#include <optional>
+#include <thread>
+#include <vector>
 
 #include "utils.hpp"
 #include "spo.hpp"
 
+#define EOS -1
+#define GO 0
+
+
 template<typename Tin,typename Tout>
 class MapReduce {
+  using command_t = std::pair<std::function<Tout(Tin&)>,int>;
   private:
     std::vector<Tin> map_input;
     queue<Tout> map_output;
     int nw;
     std::vector<std::unique_ptr<std::thread>> mtids;
-    std::vector<queue<std::function<Tout(Tin&)>>> mqids;
-    std::function<Tout(Tin&)> EOS;
+    std::vector<queue<command_t>> mqids;
 
   public:
     MapReduce(
@@ -38,15 +36,14 @@ class MapReduce {
     int chunk_size = max_size / nw;
     chunk_size = ( chunk_size == 0 ) ? max_size : chunk_size;
 
-    auto worker = [&] ( queue<std::function<Tout(Tin&)>> * q, queue<Tout> * t, int start, int end ) {
+    auto worker = [&] ( queue<command_t> * q, queue<Tout> * t, int start, int end ) {
       while ( true ) {
         auto f = q->pop ();
-        //TODO: fix termination
-        if ( false ) {
+        if ( f.second == EOS ) {
           return;
         }
         for ( int i = start; i < end; i ++ ) {
-          t->push ( f ( map_input[i] ) );
+          t->push ( f.first ( map_input[i] ) );
         }
       }
     };
@@ -63,7 +60,7 @@ class MapReduce {
     Tout compute ( std::function<Tout(Tin&)> f, std::function<Tout(Tout,Tout)> op ) {
       // Start threads
       for ( int i = 0; i < nw; i ++ ) {
-        mqids[i].push(f);
+        mqids[i].push(std::make_pair( f, GO ));
       }
       // Wait the end of the computation
       Tout glb_min = map_output.pop ();
@@ -72,15 +69,17 @@ class MapReduce {
         glb_min = op ( tmp, glb_min );
       }
 
-      glb_min.print_result ( stdout );
-      fflush ( stdout );
-
       return glb_min;
     }
 
     ~MapReduce () {
+      auto f = [](Tin& x){Tout y; return y;};
+      for ( int i = 0; i < nw; i ++ ) {
+        mqids[i].push(std::make_pair( f, EOS ));
+      }
       for ( int i = 0; i < nw; i ++ ) {
         mtids[i]->join ();
       }
     }
 };
+#endif
