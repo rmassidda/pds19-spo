@@ -34,7 +34,8 @@ int main ( int argc, char ** argv ) {
 
   // Real function to minimize
   auto f = [] ( float x, float y ) {
-    return  ( sqrtf ( std::fabs ( x ) ) + pow ( y, 10 ) ) * sqrtf ( std::fabs ( x * y ) );
+    // return pow(pow(sqrtf(std::fabs(x)) + pow(cos(x*y),sin(sqrtf(std::fabs(x)))) * sqrtf(std::fabs(sin(x)*sin(-y))),4),-1/3);
+    return std::fabs ( x + y );
   };
 
   // Comparison operator
@@ -54,10 +55,10 @@ int main ( int argc, char ** argv ) {
   }
 
   // Debug initial particles
-  printf ( "Initial particles\n" );
-  for ( int i = 0; i < n; i ++ ) {
-    print_result ( stdout, p[i].cur );
-  }
+  // printf ( "Initial particles\n" );
+  // for ( int i = 0; i < n; i ++ ) {
+  //   print_result ( stdout, p[i].cur );
+  // }
 
   // Init first global position
   result_t glb_min = p[0].loc;
@@ -65,8 +66,8 @@ int main ( int argc, char ** argv ) {
     glb_min = op ( glb_min, p[i].loc );
   }
 
-  printf ( "GLB> " );
-  print_result ( stdout, glb_min );
+  // printf ( "GLB> " );
+  // print_result ( stdout, glb_min );
 
   // Closure to update the value of a particle
   auto update = [a,b,c,f,op] ( particle_t& p, const result_t glb_min ) {
@@ -87,6 +88,7 @@ int main ( int argc, char ** argv ) {
 
     // Local minimum update
     p.loc = op ( p.cur, p.loc );
+    return p.loc;
   };
 
   // Sequential version
@@ -105,14 +107,12 @@ int main ( int argc, char ** argv ) {
   }
   // Parallel version
   else {
-    // auto u = utimer ( "map-reduce" );
-    // MapReduce<particle_t,result_t> mr ( p, nw, update, op );
-    // MapReduce<Particle,Result> mr ( particles->size(), nw );
-    // for ( int i = 0; i < n_iter; i ++ ) {
-    //   glb_min = mr.compute ( p, glb_min );
-    //   glb_min = mr.compute ( particles, update, op );
-    // }
-    // mr.stop();
+    auto u = utimer ( "map-reduce" );
+    MapReduce<particle_t,result_t> mr ( &p, update, op, nw );
+    for ( int i = 0; i < n_iter; i ++ ) {
+      glb_min = mr.compute ( glb_min );
+    }
+    mr.stop ();
   }
 
   // Print of the result
