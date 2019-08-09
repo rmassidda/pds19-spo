@@ -22,7 +22,6 @@ class Result {
       value = std::numeric_limits<float>::infinity();
     }
 
-
     // constructor in point
     Result ( const float x, const float y ) {
       position[0] = x;
@@ -71,12 +70,11 @@ struct Particle {
       // Random values
       std::pair<float,float> r;
       for ( int i = 0; i < MAX_DIM; i ++ ) {
-        r.first = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-        r.second = static_cast<float> (rand()) / static_cast<float> (RAND_MAX);
-        velocity[i] =
-          a * velocity[i] +
-          r.first * b * ( local_min.position[i] - current.position[i] ) +
-          r.second * c * ( global.position[i] - current.position[i] );
+        r.first = 0;
+        r.second = 1;
+        velocity[i] = a * velocity[i];
+        velocity[i] += r.first * b * ( local_min.position[i] - current.position[i] );
+        velocity[i] += r.second * c * ( global.position[i] - current.position[i] );
       }
     };
 
