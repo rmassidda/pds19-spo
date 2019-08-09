@@ -17,58 +17,70 @@
 template<typename Tin,typename Tout>
 class MapReduce {
   private:
-    std::vector<Tin> input;
-    std::function<Tout(Tout,Tout)> op;
+    std::vector<Tin> map_input;
+    queue<Tout> map_output;
     int nw;
+    std::vector<std::unique_ptr<std::thread>> mtids;
+    std::vector<queue<std::function<Tout(Tin&)>>> mqids;
+    std::function<Tout(Tin&)> EOS;
 
   public:
     MapReduce(
-      std::vector<Tin> input,
-      std::function<Tout(Tout,Tout)> op,
+      std::vector<Tin> map_input,
       int nw ) :
-      input ( input ),
-      op ( op ),
-      nw ( nw )
-  {}
+      map_input ( map_input ),
+      nw ( nw ),
+      mtids ( nw ),
+      mqids ( nw )
+  {
+    // Alocate output vector
+    int max_size = map_input.size ();
+    int chunk_size = max_size / nw;
+    chunk_size = ( chunk_size == 0 ) ? max_size : chunk_size;
 
-    Tout compute ( std::function<Tout(Tin&)> f ) {
-      //  Chunk sizes
-      std::vector<std::pair<int,int>> chunks;
-
-      int size = input.size() / nw;
-      for ( int i = 0; i < nw; i++ ) {
-        if( i != (nw-1) ) {
-          chunks.push_back(std::make_pair(i*size, (i+1)*size-1));   // regular chunck
-        } else {                                               // last one is longer 
-          chunks.push_back(std::make_pair(i*size, input.size()));     // sospetto fine riga -1
+    auto worker = [&] ( queue<std::function<Tout(Tin&)>> * q, queue<Tout> * t, int start, int end ) {
+      while ( true ) {
+        auto f = q->pop ();
+        //TODO: fix termination
+        if ( false ) {
+          return;
+        }
+        for ( int i = start; i < end; i ++ ) {
+          t->push ( f ( map_input[i] ) );
         }
       }
+    };
 
-      // Map worker
-      std::vector<Tout> map_out(input.size());
-      auto mapworker = [&] ( int cid ) {
-        //  Apply function
-        for(int i=chunks[cid].first; i<chunks[cid].second; i++) {  // compute the map
-          map_out[i] = ( f ( input[i] ) );
-        }
-        return;
-      };
+    for ( int i = 0; i < nw; i ++ ) {
+      // Define responsability of the worker
+      int start = i * chunk_size;
+      int end = ( i == ( nw - 1 ) ) ? max_size : ( i + 1 ) * chunk_size;
+      mtids[i] = std::make_unique<std::thread> ( worker, &mqids[i], &map_output, start, end );
+    }
 
-      // Start mappers
-      std::vector<std::thread> mtids;
-      for(int i=0; i<nw; i++)
-        mtids.push_back(std::thread(mapworker,i));
+  }
 
-      // Await mappers
-      for(int i=0; i<nw; i++)
-        mtids[i].join();
-
-      // Sequential reduce
-      // TODO: parallelize
-      Tout result;
-      for ( int i = 0; i < input.size(); i++) {
-        result = op ( result, map_out[i] );
+    Tout compute ( std::function<Tout(Tin&)> f, std::function<Tout(Tout,Tout)> op ) {
+      // Start threads
+      for ( int i = 0; i < nw; i ++ ) {
+        mqids[i].push(f);
       }
-      return result;
+      // Wait the end of the computation
+      Tout glb_min = map_output.pop ();
+      for ( int i = 1; i < map_input.size(); i ++ ) {
+        Tout tmp = map_output.pop ();
+        glb_min = op ( tmp, glb_min );
+      }
+
+      glb_min.print_result ( stdout );
+      fflush ( stdout );
+
+      return glb_min;
+    }
+
+    ~MapReduce () {
+      for ( int i = 0; i < nw; i ++ ) {
+        mtids[i]->join ();
+      }
     }
 };

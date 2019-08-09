@@ -79,9 +79,9 @@ int main ( int argc, char ** argv ) {
   // Parallel version
   else {
     auto u = utimer ( "map-reduce" );
-    MapReduce<Particle,Result> mr ( particles, op, nw );
+    MapReduce<Particle,Result> mr ( particles, nw );
     for ( int i = 0; i < n_iter; i ++ ) {
-      glb_min = mr.compute ( update );
+      glb_min = mr.compute ( update, op );
     }
   }
 
