@@ -4,6 +4,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include <ff/parallel_for.hpp>
 
 #include "spo.hpp"
 #include "mapreduce.hpp"
@@ -27,7 +28,7 @@ int main ( int argc, char ** argv ) {
   auto delay  = std::chrono::microseconds( atoi ( argv[5] ) );
 
   // Check legal values
-  if ( n <= 0 || n_iter <= 0 || nw < 0 ) {
+  if ( n <= 0 || n_iter <= 0 ) {
     usage ( argv[0] );
   }
 
@@ -126,14 +127,31 @@ int main ( int argc, char ** argv ) {
       }
     }
   }
-  // Parallel version
-  else {
+  // Parallel version (C++ std)
+  else if ( nw > 0 ) {
     auto u = utimer ( "map-reduce" );
     MapReduce<particle_t,result_t> mr ( &p, update, op, nw );
     for ( int i = 0; i < n_iter; i ++ ) {
       glb_min = mr.compute ( glb_min );
     }
     mr.stop ();
+  }
+  // Parallel version (FastFlow)
+  else {
+    nw = -nw;
+    int n = p.size();
+    auto u = utimer ( "fastflow" );
+    ff::ParallelForReduce<result_t> pfr(nw);
+    for ( int i = 0; i < n_iter; i ++ ) {
+      pfr.parallel_for ( 0, n, [&](const long j) {
+          update ( p[j], glb_min );});
+      pfr.parallel_reduce ( glb_min, glb_min, 0, n,
+        [&](const long j, result_t &glb_min){
+          glb_min = op ( glb_min, p[j].loc );
+        },
+        [&](result_t &a, const result_t b) {
+          a = op ( a, b );});
+    }
   }
 
   // Print of the result

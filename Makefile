@@ -1,9 +1,10 @@
 # swarm particle optimization
 CXX             = g++ -std=c++17
-# INCLUDES        = -I $(FF_ROOT) 
+FF_ROOT					= ~/fastflow
+INCLUDES        = -I $(FF_ROOT)
 CXXFLAGS        = -Wall
 LDFLAGS         = -pthread
-OPTFLAGS        = -O3 -finline-functions -DNDEBUG -g
+OPTFLAGS        = -O3 -finline-functions
 
 RELEASE = spo-530766
 # BIB = --bibliography fonti.bib
