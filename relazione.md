@@ -81,7 +81,7 @@ $$
 ## Comparison
 
 $$
-T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + T_m \lceil \log_2{n_w} \rceil
+T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + n_w * T_m 
 $$
 $$
 L = T_v + T_p + T_f + 2 T_m
