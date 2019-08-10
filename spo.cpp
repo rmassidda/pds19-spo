@@ -2,6 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <random>
 #include <vector>
 
 #include "spo.hpp"
@@ -30,14 +31,10 @@ int main ( int argc, char ** argv ) {
     usage ( argv[0] );
   }
 
-  const float a = 1;
-  const float b = 1;
-  const float c = 1;
-
   // Real function to minimize
   auto f = [delay] ( float x, float y ) {
     std::this_thread::sleep_for(delay);
-    return std::fabs ( x + y );
+    return x + y;
   };
 
   // Comparison operator
@@ -45,13 +42,22 @@ int main ( int argc, char ** argv ) {
     return ( a.val < b.val ) ? a : b;
   };
 
+  // Space dimension
+  const float up_limit = 1;
+  const float lo_limit = 0;
+
   // Init pseudorandom generator
-  srand ( seed );
+  std::mt19937 gen ( seed );
+  std::uniform_real_distribution<float> dis(lo_limit,up_limit);
 
   // Init particle set
   auto p = std::vector<particle_t>(n);
   for ( int i = 0; i < n; i ++ ) {
-    init_particle ( p[i] );
+    for ( int j = 0; j < MAX_DIM; j++ ) {
+      p[i].vel[j] = dis ( gen ) / 4;
+      p[i].cur.pos[j] = dis ( gen );
+      p[i].loc.pos[j] = p[i].cur.pos[j];
+    }
     p[i].cur.val = f ( p[i].cur.pos[0], p[i].cur.pos[1] );
     p[i].loc.val = p[i].cur.val;
   }
@@ -71,19 +77,33 @@ int main ( int argc, char ** argv ) {
   // printf ( "GLB> " );
   // print_result ( stdout, glb_min );
 
+  // Constants used in the simulation
+  const float a = 1;
+  const float b = 1;
+  const float c = 1;
+
   // Closure to update the value of a particle
-  auto update = [a,b,c,f,op] ( particle_t& p, const result_t glb_min ) {
+  auto update = [&dis,&gen,up_limit,lo_limit,a,b,c,f,op] ( particle_t& p, const result_t glb_min ) {
     // Velocity update
-    float loc_dist[MAX_DIM];
-    float glb_dist[MAX_DIM];
     for ( int i = 0; i < MAX_DIM; i ++ ) {
-      loc_dist[i] = p.loc.pos[i] - p.cur.pos[i];
-      glb_dist[i] = glb_min.pos[i] - p.cur.pos[i];
+      p.vel[i] = a * p.vel[i];
+      p.vel[i] += dis ( gen ) * b * ( p.loc.pos[i] - p.cur.pos[i] );
+      p.vel[i] += dis ( gen ) * c * ( glb_min.pos[i] - p.cur.pos[i] );
     }
-    update_vel ( p.vel, loc_dist, glb_dist, a, b, c );
 
     // Position update
-    update_pos ( p.cur.pos, p.vel );
+    for ( int i = 0; i < MAX_DIM; i ++ ) {
+      p.cur.pos[i] += p.vel[i];
+    }
+    // Don't let the particle exit the space ( toroidal solution )
+    for ( int i = 0; i < MAX_DIM; i ++ ) {
+      while ( p.cur.pos[i] < lo_limit ) {
+        p.cur.pos[i] = up_limit - (lo_limit-p.cur.pos[i]);
+      }
+      while ( p.cur.pos[i] > up_limit ) {
+        p.cur.pos[i] = lo_limit + (p.cur.pos[i]-up_limit);
+      }
+    }
 
     // Value update
     p.cur.val = f ( p.cur.pos[0], p.cur.pos[1] );
