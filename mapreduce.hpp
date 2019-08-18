@@ -1,41 +1,40 @@
 #ifndef MPR_HPP
 #define MPR_HPP
 #include <iostream>
-#include <queue>
 #include <thread>
 #include <vector>
 
-#include "utils.hpp"
+#include "queue.hpp"
 #include "spo.hpp"
 
 #define EOS -1
 #define GO 0
 
 
-template<typename Tin,typename Tout>
+template<typename T1, typename T2>
 class MapReduce {
   private:
   // Input
-  std::vector<Tin> * input;
+  std::vector<T1> * input;
   int n;
-  Tout ref;
+  T2 ref;
 
   // Inner functions
-  std::function<Tout(Tin&,const Tout)> f;
-  std::function<Tout(Tout,Tout)> op;
+  std::function<T2(T1&,const T2)> f;
+  std::function<T2(T2,T2)> op;
 
   // Thread Pool
   int nw;
   std::vector<std::unique_ptr<std::thread>> pool;
-  std::vector<queue<int>> work_q;
-  queue<Tout> result_q;
+  std::vector<Queue<int>> work_q;
+  Queue<T2> result_q;
 
 
   public:
   MapReduce(
-      std::vector<Tin> * input,
-      std::function<Tout(Tin&,const Tout)> f,
-      std::function<Tout(Tout,Tout)> op,
+      std::vector<T1> * input,
+      std::function<T2(T1&,const T2)> f,
+      std::function<T2(T2,T2)> op,
       int nw ) :
     input ( input ),
     n ( input->size() ),
@@ -53,7 +52,7 @@ class MapReduce {
         if ( p == EOS ) {
           return;
         }
-        Tout tmp = ref;
+        T2 tmp = ref;
         for ( int i = start; i < end; i ++ ) {
           tmp = this->op ( tmp, this->f ( (*this->input)[i], ref ) );
         }
@@ -73,7 +72,7 @@ class MapReduce {
 
   }
 
-  Tout compute ( Tout ref ) {
+  T2 compute ( T2 ref ) {
     // Update the reference
     this->ref = ref;
     // Start threads
