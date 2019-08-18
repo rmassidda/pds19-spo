@@ -50,6 +50,7 @@ class MapReduce {
         if ( p == EOS ) {
           return;
         }
+
         T2 tmp = this->ref;
         for ( int i = start; i < end; i ++ ) {
           tmp = this->op ( tmp, this->f ( (*this->input)[i], this->ref ) );
