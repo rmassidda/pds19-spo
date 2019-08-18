@@ -10,7 +10,6 @@
 #define EOS -1
 #define GO 0
 
-
 template<typename T1, typename T2>
 class MapReduce {
   private:
@@ -29,7 +28,6 @@ class MapReduce {
   std::vector<Queue<int>> work_q;
   Queue<T2> result_q;
 
-
   public:
   MapReduce(
       std::vector<T1> * input,
@@ -42,7 +40,7 @@ class MapReduce {
     op ( op ),
     nw ( nw ),
     pool ( nw ),
-    work_q ( n )
+    work_q ( nw )
   {
 
     auto worker = [this] ( int id, int start, int end ) {
@@ -52,9 +50,9 @@ class MapReduce {
         if ( p == EOS ) {
           return;
         }
-        T2 tmp = ref;
+        T2 tmp = this->ref;
         for ( int i = start; i < end; i ++ ) {
-          tmp = this->op ( tmp, this->f ( (*this->input)[i], ref ) );
+          tmp = this->op ( tmp, this->f ( (*this->input)[i], this->ref ) );
         }
         this->result_q.push ( tmp );
       }
@@ -79,7 +77,7 @@ class MapReduce {
     for ( int i = 0; i < nw; i ++ ) {
       work_q[i].push( GO );
     }
-    // Barrier
+    // Reduce
     for ( int i = 0; i < nw; i ++ ) {
       ref = op ( result_q.pop(), ref );
     }
@@ -88,7 +86,7 @@ class MapReduce {
 
   void stop () {
     // Stop threads
-    for ( int i = 0; i < n; i ++ ) {
+    for ( int i = 0; i < nw; i ++ ) {
       work_q[i].push ( EOS );
     }
     for ( int i = 0; i < nw; i ++ ) {
