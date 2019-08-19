@@ -7,7 +7,6 @@
 #include <cmath>
 
 #define MAX_DIM 2
-#define rnd() static_cast<float> (rand()) / static_cast<float> (RAND_MAX)
 
 struct result {
   float pos[MAX_DIM];
