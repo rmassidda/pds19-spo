@@ -52,7 +52,7 @@ class MapReduce {
         }
 
         T2 tmp = this->ref;
-        for ( int i = start; i < end; i ++ ) {
+        for ( int i = start; i < end && i < this->n; i ++ ) {
           tmp = this->op ( tmp, this->f ( (*this->input)[i], this->ref ) );
         }
         this->result_q.push ( tmp );
@@ -65,7 +65,7 @@ class MapReduce {
     for ( int i = 0; i < nw; i ++ ) {
       // Define responsability of the worker
       int start = i * chunk_size;
-      int end = ( i == ( nw - 1 ) ) ? n : ( i + 1 ) * chunk_size;
+      int end = ( i + 1 ) * chunk_size;
       pool[i] = std::make_unique<std::thread> ( worker, i, start, end );
     }
 
