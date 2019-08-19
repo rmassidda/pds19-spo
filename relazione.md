@@ -20,22 +20,21 @@ Because of the constant and minimum contribution to the performance, the paralle
 
 ## General considerations
 
-Each iteration computes a candidate to be the global minimum of a certain real function; the computation depends on the result of the previous states, so a **barrier** must exist to insure coherency.
+Each iteration computes a candidate to be the global minimum of a certain real function; the computation depends on the result of the previous states, so a **barrier** must exist to insure soundness.
 
 The vector nature of the problem, given by the position and the speed of an object in a multidimensional space, is prone to the use of **vectorization** to parallelize the computation in independent dimensions.
-For the vectorization to be effective the operations to limit the boundaries of the solution space could be limited by the ALU's architecture, for example the modulo operator useful to provide a toroidal space couldn't be available, so this choice has to be experimental evaluated.
 
-## MapReduce
+## Map+Reduce
 
-A possible approach is to use the MapReduce pattern to parallelize the computation of a state.
+A possible approach is to combine the **Map** and the **Reduce** patterns to parallelize the computation of a state.
 
-The *map* function should take a particle, update its internal state and return a reference to the local minimum.
+The function given to the *map* should take a particle, update its internal state as a side-effect and return a reference to the local minimum.
 
 $$
 f: \textrm{particle} \rightarrow \textrm{result}
 $$
 
-It's possible to describe the *reduce* phase as the phase where all the local minimums are compared, generating the new global minimum.
+Given that the global minimum is always the minimum of the local minimums of all the particles, it's possible to *reduce* the result from the updated particles.
 
 $$
 min: \textrm{result} \times \textrm{result} \rightarrow \textrm{result}
@@ -52,12 +51,12 @@ Identifying the dependencies allows a **functional deconstruction** of the body 
 - the position depends on the current velocity
 - the velocity of a particle depends on the local and global minimum
 
-Given this functional dependencies, it could be instead possible to benefit of a **pipeline introduction** using a *scatter* to generate a stream from a collection.
+Given this functional dependencies, it could be possible to benefit of a **pipeline introduction** using a *scatter* to generate a stream from a collection.
 
 ![](img/pipe.png)
 
 Since the user provided $f$ function can be arbitrarily complex its service time could easily become the bottleneck of the pipeline.
-The confirmation of this intuition and the evidence of other bottlenecks could emerge during the *profiling* phase after the implementation.
+The proof of this intuition and the evidence of other bottlenecks could emerge during the *profiling* phase after the implementation.
 The performance could benefit so of a **farm introduction**.
 
 ![](img/farm.png)
@@ -80,21 +79,30 @@ $$
 
 ## Comparison
 
+The performance of the proposed solutions are easily comparable in terms of completion time for each iteration.
+
 $$
 T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + n_w * T_m 
 $$
-$$
-L = T_v + T_p + T_f + 2 T_m
-$$
+
+In the pipeline solution the estimated service time leads to the completion time with an high $n$ value.
+
 $$
 T_s = \max ( T_v , T_p , T_f , T_m )
 $$
+
 $$
 T_{\textrm{Pipe}} \approx n * T_{s} = n * \max ( T_v , T_p , T_f , T_m )
 $$
+
+After the farm introduction to avoid the bottleneck the estimated completion time becomes:
+
 $$
 T_{\textrm{PipeFarm}} \approx n * \max ( T_v , T_p , \frac{T_f}{n_w} , T_m )
 $$
+
+Assuming that an high number of particles is involved in the computation and that the $f$ complexity requires a significant time both the PipeFarm and the MapReduce solutions are theoretically equivalent.
+The communication needed in between the stages in the pipeline solution and the effort needed to generate a stream from a collection could produce a consistent overhead not present in the data parallel solution, so the data parallel solution is favorable.
 
 # Implementation details
 
