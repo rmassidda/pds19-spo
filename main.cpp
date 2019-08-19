@@ -129,7 +129,7 @@ int main ( int argc, char ** argv ) {
   }
   // Parallel version (C++ std)
   else if ( nw > 0 ) {
-    auto u = utimer ( "map-reduce" );
+    auto u = utimer ( "map reduce" );
     MapReduce<particle_t,result_t> mr ( &p, update, op, nw );
     for ( int i = 0; i < n_iter; i ++ ) {
       glb_min = mr.compute ( glb_min );
@@ -143,10 +143,10 @@ int main ( int argc, char ** argv ) {
     auto u = utimer ( "fastflow" );
     ff::ParallelForReduce<result_t> pfr(nw);
     for ( int i = 0; i < n_iter; i ++ ) {
-      pfr.parallel_for ( 0, n, [&](const long j) {
-          update ( p[j], glb_min );});
-      pfr.parallel_reduce ( glb_min, glb_min, 0, n,
+      result_t ref = glb_min;
+      pfr.parallel_reduce ( glb_min, ref, 0, n,
         [&](const long j, result_t &glb_min){
+          update ( p[j], ref );
           glb_min = op ( glb_min, p[j].loc );
         },
         [&](result_t &a, const result_t b) {
