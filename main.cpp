@@ -12,6 +12,11 @@
 
 void usage ( char * name ) { 
   fprintf ( stderr, "Usage: %s seed n n_iter n_w delay\n", name );
+  fprintf ( stderr, "\tseed\tused by the random number generator\n" );
+  fprintf ( stderr, "\tn\tnumber of particles\n" );
+  fprintf ( stderr, "\tm\tnumber of iterations\n" );
+  fprintf ( stderr, "\tn_w\tworkers 0=seq, >0=C++ threads, <0=fastflow\n" );
+  fprintf ( stderr, "\tdelay\tartificial delay in the user function\n" );
   exit ( EXIT_FAILURE );
 }
 
