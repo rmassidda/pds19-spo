@@ -11,18 +11,19 @@
 #include "utimer.hpp"
 
 void usage ( char * name ) { 
-  fprintf ( stderr, "Usage: %s seed n n_iter n_w delay\n", name );
+  fprintf ( stderr, "Usage: %s seed n n_iter n_w delay [ff]\n", name );
   fprintf ( stderr, "\tseed\tused by the random number generator\n" );
   fprintf ( stderr, "\tn\tnumber of particles\n" );
   fprintf ( stderr, "\tm\tnumber of iterations\n" );
-  fprintf ( stderr, "\tn_w\tworkers 0=seq, >0=C++ threads, <0=fastflow\n" );
+  fprintf ( stderr, "\tn_w\tworkers 0=seq, >0=parallel\n" );
   fprintf ( stderr, "\tdelay\tartificial delay in the user function\n" );
+  fprintf ( stderr, "\tff\tuse fastflow framework\n" );
   exit ( EXIT_FAILURE );
 }
 
 int main ( int argc, char ** argv ) {
   // User arguments
-  if ( argc != 6 ) {
+  if ( argc < 6 ) {
     usage ( argv[0] );
   }
   
@@ -31,6 +32,7 @@ int main ( int argc, char ** argv ) {
   auto n_iter = atoi ( argv[3] );
   auto nw     = atoi ( argv[4] );
   auto delay  = std::chrono::microseconds( atoi ( argv[5] ) );
+  auto fast_flow = ( argc > 6 ) ? true : false;
 
   // Check legal values
   if ( n <= 0 || n_iter <= 0 ) {
@@ -133,8 +135,8 @@ int main ( int argc, char ** argv ) {
     }
   }
   // Parallel version (C++ std)
-  else if ( nw > 0 ) {
-    auto u = utimer ( "map reduce" );
+  else if ( !fast_flow ) {
+    auto u = utimer ( "mapreduce" );
     MapReduce<particle_t,result_t> mr ( &p, update, op, nw );
     for ( int i = 0; i < n_iter; i ++ ) {
       glb_min = mr.compute ( glb_min );
@@ -143,7 +145,6 @@ int main ( int argc, char ** argv ) {
   }
   // Parallel version (FastFlow)
   else {
-    nw = -nw;
     int n = p.size();
     auto u = utimer ( "fastflow" );
     ff::ParallelForReduce<result_t> pfr(nw);

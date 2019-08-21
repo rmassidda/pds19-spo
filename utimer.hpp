@@ -20,7 +20,7 @@ class utimer {
       stop = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsed = stop - start;
       auto musec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-      std::cout << message << " computed in " << musec << " usec "  << std::endl;
+      std::cerr << message << " computed in " << musec << " usec "  << std::endl;
     }
 };
 #endif
