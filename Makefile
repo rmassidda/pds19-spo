@@ -4,7 +4,7 @@ FF_ROOT					= ~/fastflow
 INCLUDES        = -I $(FF_ROOT)
 CXXFLAGS        = -Wall
 LDFLAGS         = -pthread
-OPTFLAGS        = -O3 -finline-functions -fopt-info-vec-all
+OPTFLAGS        = -O3 -finline-functions #-fopt-info-vec-all
 
 SOURCE = mapreduce.hpp spo.hpp utimer.hpp queue.hpp main.cpp
 RELEASE = spo-530766
