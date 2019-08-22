@@ -1,4 +1,4 @@
 *.pdf
 *.tar.gz
 spo
-results/*
+experiment/*
