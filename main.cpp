@@ -11,12 +11,12 @@
 #include "utimer.hpp"
 
 void usage ( char * name ) { 
-  fprintf ( stderr, "Usage: %s seed n n_iter n_w delay [ff]\n", name );
+  fprintf ( stderr, "Usage: %s seed n n_iter p n_w [ff]\n", name );
   fprintf ( stderr, "\tseed\tused by the random number generator\n" );
   fprintf ( stderr, "\tn\tnumber of particles\n" );
   fprintf ( stderr, "\tm\tnumber of iterations\n" );
+  fprintf ( stderr, "\tp\tprecision in the integral calculum\n" );
   fprintf ( stderr, "\tn_w\tworkers 0=seq, >0=parallel\n" );
-  fprintf ( stderr, "\tdelay\tartificial delay in the user function\n" );
   fprintf ( stderr, "\tff\tuse fastflow framework\n" );
   exit ( EXIT_FAILURE );
 }
@@ -30,8 +30,8 @@ int main ( int argc, char ** argv ) {
   auto seed   = atoi ( argv[1] );
   auto n      = atoi ( argv[2] );
   auto n_iter = atoi ( argv[3] );
-  auto nw     = atoi ( argv[4] );
-  auto delay  = std::chrono::microseconds( atoi ( argv[5] ) );
+  auto prec   = atof ( argv[4] );
+  auto nw     = atoi ( argv[5] );
   auto fast_flow = ( argc > 6 ) ? true : false;
 
   // Check legal values
@@ -40,18 +40,27 @@ int main ( int argc, char ** argv ) {
   }
 
   // Real function to minimize
-  auto f = [delay] ( float x, float y ) {
-    std::this_thread::sleep_for(delay);
-    return x + y;
+  auto integrand = [] ( float x ) {
+    return sin(x);
+  };
+  auto f = [prec, integrand] ( float x, float y ) {
+    float integral = 0;
+    float a = ( x < y ) ? x : y;
+    float b = ( x < y ) ? y : x;
+    while ( a < b ) {
+      integral += prec * integrand ( a );
+      a += prec;
+    }
+    return integral;
   };
 
   // Comparison operator
   auto op = [] ( result_t a, result_t b ) {
-    return ( a.val < b.val ) ? a : b;
+    return ( a.val < b.val ) ? b : a;
   };
 
   // Space dimension
-  const float up_limit = 1;
+  const float up_limit = 4;
   const float lo_limit = 0;
 
   // Init pseudorandom generator

@@ -17,14 +17,15 @@ class Experiment:
 
 def createPlot ( name, x, ff, cpp ):
     plt.clf ()
-    plt.plot(x, x, color='black', label='linear')
-    plt.plot(x, ff, '--', color='black', label='fast flow')
-    plt.plot(x, cpp, '.', color='black', label='cpp_thread')
+    plt.figure(figsize=(15, 10))
+    plt.plot(x, x, color='black', label='Linear')
+    plt.plot(x, ff, '--', color='black', label='Fast Flow')
+    plt.plot(x, cpp, '.', color='black', label='C++ Thread')
     plt.xlabel('workers')
     plt.ylabel('performance')
     plt.title(name)
     plt.legend()
-    plt.savefig(name+'.png')
+    plt.savefig(name+'.png', bbox_inches="tight" )
     # plt.show()
 
 # Experimental results
@@ -35,7 +36,7 @@ x = []
 i = 0
 for line in fileinput.input():
     parts = line.split()
-    if i <= 64:
+    if i <= 128:
         fast_flow.times.append ( int ( parts[3] ) )
         x.append ( i )
         i = i + 1
