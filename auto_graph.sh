@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 2 ]; then
-    echo "Usage: ./auto_test.sh max_nw directory"
+    echo "Usage: $0 max_nw directory"
     exit
 fi
 
