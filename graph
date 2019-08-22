@@ -1,0 +1,52 @@
+#! /bin/env python3
+import fileinput
+import matplotlib.pyplot as plt
+import numpy as np
+
+class Experiment:
+    def __init__(self):
+        self.times = []
+
+    def scalability(self):
+        self.sc = np.array ( list ( map ( lambda t: self.times[1]/t, self.times ) ) )
+        return self.sc
+
+    def speedup(self):
+        self.sp = np.array ( list ( map ( lambda t: self.times[0]/t, self.times ) ) )
+        return self.sp
+
+def createPlot ( name, x, ff, cpp ):
+    plt.clf ()
+    plt.plot(x, x, color='black', label='linear')
+    plt.plot(x, ff, '--', color='black', label='fast flow')
+    plt.plot(x, cpp, '.', color='black', label='cpp_thread')
+    plt.xlabel('workers')
+    plt.ylabel('performance')
+    plt.title(name)
+    plt.legend()
+    plt.savefig(name+'.png')
+    # plt.show()
+
+# Experimental results
+fast_flow = Experiment ()
+cpp_thread = Experiment ()
+x = []
+
+i = 0
+for line in fileinput.input():
+    parts = line.split()
+    if i <= 64:
+        fast_flow.times.append ( int ( parts[3] ) )
+        x.append ( i )
+        i = i + 1
+    else:
+        cpp_thread.times.append ( int ( parts[3] ) )
+
+x = np.array ( x )
+# print ( x )
+# print ( fast_flow.scalability() )
+# print ( fast_flow.speedup() )
+# print ( cpp_thread.scalability() )
+# print ( cpp_thread.speedup() )
+createPlot ( "Scalability", x, fast_flow.scalability(), cpp_thread.scalability() )
+createPlot ( "Speedup", x, fast_flow.speedup(), cpp_thread.speedup() )
