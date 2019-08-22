@@ -9,6 +9,6 @@ MAXNW=$1
 DIR=$2
 
 rm -f $DIR/*.png
-cat $DIR/* | ./graph $MAXNW
+cat $DIR/ff $DIR/cpp | ./graph $MAXNW
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
