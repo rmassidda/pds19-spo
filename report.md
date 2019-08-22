@@ -145,9 +145,9 @@ As in the C++ threads solutions the map and the local reduction are executed seq
 Both the queues used for the communication between the main thread and the workers of the thread pool, and the class used to take times are the *standard* ones used for the PDS course.
 Those are respectively in the `queue.hpp` and `utimer.hpp` files.
 
-The project is compilable via a Makefile using the following command: `make spo`.
-The utility `auto_time.sh` allows to monitor the times of an experiment executing the `spo` software with an increasing number of workers and storing the results in a dedicated folder.
-Without adding redundant informations to this report is possible to see the required argument list by calling both `spo` and `auto_time.sh` without any argument.
+After setting the variable `$FF_ROOT` to the FastFlow current path in the Makefile, the project is compilable using the command: `make spo`.
+The utility `autotime.sh` can be used to keep track of the times of an experiment executing the `spo` software with an increasing number of workers and storing the results in a dedicated folder.
+Without adding redundant informations to this report is possible to see the required argument list by calling both `spo` and `autotime.sh` without any argument.
 
 # Experimental results
 
