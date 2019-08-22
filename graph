@@ -1,5 +1,5 @@
 #! /bin/env python3
-import fileinput
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -33,10 +33,13 @@ fast_flow = Experiment ()
 cpp_thread = Experiment ()
 x = []
 
+# Maximum number of workers
+max_nw = int ( sys.argv[1] )
+
 i = 0
-for line in fileinput.input():
+for line in sys.stdin:
     parts = line.split()
-    if i <= 128:
+    if i <= max_nw:
         fast_flow.times.append ( int ( parts[3] ) )
         x.append ( i )
         i = i + 1
@@ -44,10 +47,11 @@ for line in fileinput.input():
         cpp_thread.times.append ( int ( parts[3] ) )
 
 x = np.array ( x )
+createPlot ( "Scalability", x, fast_flow.scalability(), cpp_thread.scalability() )
+createPlot ( "Speedup", x, fast_flow.speedup(), cpp_thread.speedup() )
+
 # print ( x )
 # print ( fast_flow.scalability() )
 # print ( fast_flow.speedup() )
 # print ( cpp_thread.scalability() )
 # print ( cpp_thread.speedup() )
-createPlot ( "Scalability", x, fast_flow.scalability(), cpp_thread.scalability() )
-createPlot ( "Speedup", x, fast_flow.speedup(), cpp_thread.speedup() )

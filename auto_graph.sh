@@ -1,8 +1,14 @@
 #!/bin/bash
 
-DIR=$1
+if [ "$#" -ne 2 ]; then
+    echo "Usage: ./auto_test.sh max_nw directory"
+    exit
+fi
 
-rm -f results/$DIR/*.png
-cat results/$DIR/* | ./graph
-mv Scalability.png results/$DIR/scalability.png
-mv Speedup.png results/$DIR/speedup.png
+MAXNW=$1
+DIR=$2
+
+rm -f $DIR/*.png
+cat $DIR/* | ./graph $MAXNW
+mv Scalability.png $DIR/scalability.png
+mv Speedup.png $DIR/speedup.png
