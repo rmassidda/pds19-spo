@@ -47,7 +47,7 @@ for line in sys.stdin:
         cpp_thread.times.append ( int ( parts[3] ) )
 
 x = np.array ( x )
-createPlot ( "Scalability", x, fast_flow.scalability(), cpp_thread.scalability() )
+createPlot ( "Scalability", x[1:len(x)], fast_flow.scalability()[1:len(x)], cpp_thread.scalability()[1:len(x)] )
 createPlot ( "Speedup", x, fast_flow.speedup(), cpp_thread.speedup() )
 
 # print ( x )
