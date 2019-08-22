@@ -15,9 +15,9 @@ report: report.md report.yaml
 spo: $(SOURCE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $^ $(LDFLAGS)
 
-dist: spo report
+dist: report
 	mkdir -p $(RELEASE)
-	cp $(SOURCE) report.pdf $(RELEASE)
+	cp $(SOURCE) report.pdf autotime.sh Makefile $(RELEASE)
 	tar -cf $(RELEASE).tar $(RELEASE)
 	gzip $(RELEASE).tar
 	rm -rf $(RELEASE)
