@@ -2,7 +2,7 @@
 
 SEED=42
 N=4096
-M=32
+M=16
 MAX_NW=$1
 DELAY=$2
 FF=$3
