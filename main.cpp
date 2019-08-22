@@ -51,12 +51,13 @@ int main ( int argc, char ** argv ) {
       integral += prec * integrand ( a );
       a += prec;
     }
+    integral = ( x < y ) ? integral : - integral;
     return integral;
   };
 
   // Comparison operator
   auto op = [] ( result_t a, result_t b ) {
-    return ( a.val < b.val ) ? b : a;
+    return ( a.val < b.val ) ? a : b;
   };
 
   // Space dimension
