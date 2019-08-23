@@ -7,8 +7,7 @@ fi
 
 DIR=$1
 
-rm -f $DIR/*.png
-cat $DIR/ff $DIR/cpp | ./plot
+./plot $DIR/ff $DIR/cpp
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
 mv Efficiency.png $DIR/efficiency.png

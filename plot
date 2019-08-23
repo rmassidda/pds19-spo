@@ -1,83 +1,89 @@
 #! /bin/env python3
 import math
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 import numpy as np
 import sys
 
+marker = [ '--', ':' ]
+
 class Experiment:
-    def __init__(self):
+    def __init__(self, name):
         self.times = []
+        self.name = name
 
     def efficiency ( self ) :
-        self.ef = np.array ( [1] + [self.seq/((i+1)*self.times[i]) for i in range(len(self.times))])
+        ef = [1]
+        ef = ef + [self.times[0]/(i*self.times[i]) for i in range(len(self.times))[1:]];
+        self.ef = np.array ( ef )
 
     def scalability(self):
-        self.sc = np.array ( [0] + list ( map ( lambda t: self.times[0]/t, self.times ) ) )
+        self.sc = np.array ( list ( map ( lambda t: self.times[1]/t, self.times ) ) )
+        self.sc[0] = 0
 
     def speedup(self):
-        self.sp = np.array ( [0] + list ( map ( lambda t: self.seq/t, self.times ) ) )
+        self.sp = np.array ( list ( map ( lambda t: self.times[0]/t, self.times ) ) )
+        self.sp[0] = 0
 
-    def computePerformance ( self, seq ):
-        self.seq = seq
+    def compute ( self ):
         self.scalability()
         self.speedup()
         self.efficiency()
 
-def createPlot ( name, x, ff, cpp, linear=True ):
-    plt.clf ()
-    if linear:
-        plt.figure(figsize=(30, 30))
-        plt.plot(x, x, color='black', label='Linear')
-    else:
-        plt.figure(figsize=(30,10))
-        plt.plot ( x, [1 for i in range(len(x))], color='black' )
+def plot ( name, exp ):
+    plt.figure(num=None, figsize=(12,9))
+
+    # Maximum value
+    max_x = 0
+    max_y = 0
         
-    plt.plot(x, ff, 'o:', color='black', label='Fast Flow')
-    plt.plot(x, cpp, 's--', color='black', label='C++ Thread')
+    index = 0
+    # Add the experimental results
+    for e in exp:
+        # Get the required data
+        if name == "Scalability":
+            arr = e.sc
+        elif name == "Speedup":
+            arr = e.sp
+        elif name == "Efficiency":
+            arr = e.ef
+        else:
+            arr = None
+        x = np.array ( range ( len ( arr ) ) )
+        plt.plot( x, arr, marker[index], color='black', label=e.name)
+        for t in arr:
+            max_y = max ( t, max_y )
+        max_x = max ( max_x, len ( arr ) )
+        index = index + 1
+
+    if name != "Efficiency":
+        max_y = math.ceil ( max_y )
+        arr = np.array ( range ( max_y + 1) )
+        plt.plot( arr, arr, color='black' )
+    else:
+        plt.plot ( range(max_x), [1 for i in range(max_x)], color='black' )
+
     plt.xlabel('workers')
-
-    # if linear:
-    #     plt.ylim([0,30])
-
     plt.title(name)
     plt.legend()
     plt.savefig(name+'.png', bbox_inches="tight" )
-    # plt.show()
 
 # Experimental results
-fast_flow = Experiment ()
-cpp_thread = Experiment ()
+exp = []
 
-x = [0]
-i = 1
-seq = math.inf
-for line in sys.stdin:
-    parts = line.split()
-    if parts[0] == 'sequential':
-        seq = min ( seq, int ( parts[3] ) )
-    elif parts[0] == 'mapreduce':
-        cpp_thread.times.append ( int ( parts[3] ) )
-        x.append ( i )
-        i = i + 1
-    elif parts[0] == 'fastflow':
-        fast_flow.times.append ( int ( parts[3] ) )
+# Read experiments
+for file_path in sys.argv[1:]:
+    with open(file_path) as file:
+        e = Experiment ( file_path )
+        for line in file:
+            parts = line.split()
+            e.times.append ( int ( parts[3] ) )
+        exp.append ( e )
 
-# Compute the performance metrics
-fast_flow.computePerformance(seq)
-cpp_thread.computePerformance(seq)
+# Compute the metrics
+for e in exp:
+    e.compute()
 
-x = np.array ( x )
-createPlot ( "Scalability", x, fast_flow.sc, cpp_thread.sc )
-createPlot ( "Speedup", x, fast_flow.sp, cpp_thread.sp )
-createPlot ( "Efficiency", x, fast_flow.ef, cpp_thread.ef, linear=False )
-
-# print ( len ( fast_flow.times ) )
-# print ( len ( fast_flow.sc ) )
-# print ( len ( fast_flow.ef ) )
-# print ( len ( x )  )
-# print ( fast_flow.ef )
-# print ( fast_flow.sc )
-# print ( fast_flow.sp )
-# print ( cpp_thread.ef )
-# print ( cpp_thread.sc )
-# print ( cpp_thread.sp )
+plot ( "Scalability", exp )
+plot ( "Speedup", exp )
+plot ( "Efficiency", exp )
