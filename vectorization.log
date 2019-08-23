@@ -1,0 +1,12 @@
+g++ -std=c++17 -Wall -I ~/fastflow -O3 -finline-functions -fopt-info-vec-all -o spo mapreduce.hpp spo.hpp utimer.hpp queue.hpp main.cpp -pthread
+# Update velocity
+main.cpp:93:24: missed: couldn't vectorize loop
+main.cpp:93:24: missed: not vectorized: control flow in loop.
+
+# Update position
+main.cpp:104:24: missed: couldn't vectorize loop
+main.cpp:104:24: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+main.cpp:105:28: missed: couldn't vectorize loop
+main.cpp:105:28: missed: not vectorized: number of iterations cannot be computed.
+main.cpp:108:28: missed: couldn't vectorize loop
+main.cpp:108:28: missed: not vectorized: number of iterations cannot be computed.
