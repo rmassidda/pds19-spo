@@ -9,8 +9,10 @@ OPTFLAGS        = -O3 -finline-functions #-fopt-info-vec-all
 SOURCE = mapreduce.hpp spo.hpp utimer.hpp queue.hpp main.cpp
 RELEASE = spo-530766
 
+STYLE= --highlight-style=monochrome
+
 report: report.md report.yaml
-	pandoc ${BIB} ${STYLE} -o $@.pdf $^
+	pandoc ${STYLE} -o $@.pdf $^
 
 spo: $(SOURCE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $^ $(LDFLAGS)
