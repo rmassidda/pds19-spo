@@ -8,25 +8,37 @@ class Experiment:
     def __init__(self):
         self.times = []
 
-    def setSeq ( self, seq ):
-        self.seq = seq
+    def efficiency ( self ) :
+        self.ef = np.array ( [1] + [self.seq/((i+1)*self.times[i]) for i in range(len(self.times))])
 
     def scalability(self):
         self.sc = np.array ( [0] + list ( map ( lambda t: self.times[0]/t, self.times ) ) )
-        return self.sc
 
     def speedup(self):
         self.sp = np.array ( [0] + list ( map ( lambda t: self.seq/t, self.times ) ) )
-        return self.sp
 
-def createPlot ( name, x, ff, cpp ):
+    def computePerformance ( self, seq ):
+        self.seq = seq
+        self.scalability()
+        self.speedup()
+        self.efficiency()
+
+def createPlot ( name, x, ff, cpp, linear=True ):
     plt.clf ()
-    plt.figure(figsize=(15, 10))
-    plt.plot(x, x, color='black', label='Linear')
-    plt.plot(x, ff, 's--', color='black', label='Fast Flow')
-    plt.plot(x, cpp, 'o:', color='black', label='C++ Thread')
+    if linear:
+        plt.figure(figsize=(30, 30))
+        plt.plot(x, x, color='black', label='Linear')
+    else:
+        plt.figure(figsize=(30,10))
+        plt.plot ( x, [1 for i in range(len(x))], color='black' )
+        
+    plt.plot(x, ff, 'o:', color='black', label='Fast Flow')
+    plt.plot(x, cpp, 's--', color='black', label='C++ Thread')
     plt.xlabel('workers')
-    plt.ylabel('performance')
+
+    # if linear:
+    #     plt.ylim([0,30])
+
     plt.title(name)
     plt.legend()
     plt.savefig(name+'.png', bbox_inches="tight" )
@@ -50,16 +62,22 @@ for line in sys.stdin:
     elif parts[0] == 'fastflow':
         fast_flow.times.append ( int ( parts[3] ) )
 
-# Add the best sequential time
-fast_flow.setSeq ( seq )
-cpp_thread.setSeq ( seq )
+# Compute the performance metrics
+fast_flow.computePerformance(seq)
+cpp_thread.computePerformance(seq)
 
 x = np.array ( x )
-createPlot ( "Scalability", x, fast_flow.scalability(), cpp_thread.scalability() )
-createPlot ( "Speedup", x, fast_flow.speedup(), cpp_thread.speedup() )
+createPlot ( "Scalability", x, fast_flow.sc, cpp_thread.sc )
+createPlot ( "Speedup", x, fast_flow.sp, cpp_thread.sp )
+createPlot ( "Efficiency", x, fast_flow.ef, cpp_thread.ef, linear=False )
 
-# print ( x )
-# print ( fast_flow.scalability() )
-# print ( fast_flow.speedup() )
-# print ( cpp_thread.scalability() )
-# print ( cpp_thread.speedup() )
+# print ( len ( fast_flow.times ) )
+# print ( len ( fast_flow.sc ) )
+# print ( len ( fast_flow.ef ) )
+# print ( len ( x )  )
+# print ( fast_flow.ef )
+# print ( fast_flow.sc )
+# print ( fast_flow.sp )
+# print ( cpp_thread.ef )
+# print ( cpp_thread.sc )
+# print ( cpp_thread.sp )

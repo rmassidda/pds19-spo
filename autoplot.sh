@@ -11,3 +11,4 @@ rm -f $DIR/*.png
 cat $DIR/ff $DIR/cpp | ./plot
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
+mv Efficiency.png $DIR/efficiency.png
