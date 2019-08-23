@@ -14,14 +14,14 @@ while not termination:
       global_min = p.local_min
 ```
 
-The algorithm execution consists of a number of iterations determined by a certain termination condition, for the sake of simplicity this number consists in a integer provided by the user.
-Because of the constant and minimum contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in this report nor in the implementation.
+The algorithm execution consists of several iterations determined by a certain termination condition, for the sake of simplicity this number consists of an integer provided by the user.
+Because of the constant and minimum contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in the implementation and this report.
 
 ## General considerations
 
-Each iteration computes a candidate to be the global minimum of a certain real function; the computation depends on the result of the previous states, so a **barrier** between subsequent iterations must exist to insure soundness.
+Each iteration computes a candidate to be the global minimum of a certain real function; the computation depends on the result of the previous states, so a **barrier** between subsequent iterations must exist to ensure soundness.
 
-The computation of the movement and the value of the function in a certain point is *embarrassing parallel* because of the independence of the particles, if the model included the possible impacts this wouldn't be true anymore.
+The computation of the movement and the value of the function in a certain point is *embarrassing parallel* because of the independence of the particles. 
 
 The vector nature of the problem, given by the position and the speed of an object in a multidimensional space, is prone to the use of **vectorization** to parallelize the computation in independent dimensions.
 
@@ -49,18 +49,18 @@ A two-phase reduction with a local reduction of a chunk and a global reduction f
 
 Identifying the data dependencies allows a *functional deconstruction* of the body of the loop:
 
-- the update of the local minimum of a particle depends on the result of the user provided function
+- the update of the local minimum of a particle depends on the result of the user-provided function
 - the computed value depends on the current position of the particle
 - the position depends on the current velocity
 - the velocity of a particle depends on the local and global minimum
 
-Given this functional dependencies, it could be possible to benefit of a *pipeline introduction* using a first stage capable to generate a stream from a collection.
+Given these functional dependencies, it could be possible to benefit from a *pipeline introduction* using a first stage capable to generate a stream from a collection.
 
 ![](img/pipe.png)
 
-Since the user provided $f$ function can be arbitrarily complex its service time could easily become the bottleneck of the pipeline.
+Since the user-provided $f$ function can be arbitrarily complex its service time could easily become the bottleneck of the pipeline.
 The proof of this intuition and the evidence of other bottlenecks could emerge during the *profiling* phase after the implementation.
-The performance could benefit so of a farm introduction.
+The performance could benefit so from a farm introduction.
 
 ![](img/farm.png)
 
@@ -82,13 +82,13 @@ $$
 
 ## Comparison
 
-The performance of the proposed solutions are easily comparable in terms of completion time for each iteration.
+The performances of the proposed solutions are easily comparable in terms of completion time for each iteration.
 
 $$
 T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + n_w * T_m 
 $$
 
-In the pipeline solution the estimated service time leads to the completion time for a high $n$ value.
+In the pipeline solution, the estimated service time leads to the completion time for a high $n$ value.
 
 $$
 T_s = \max ( T_v , T_p , T_f , T_m )
@@ -104,50 +104,49 @@ $$
 T_{\textrm{PipeFarm}} \approx n * \max ( T_v , T_p , \frac{T_f}{n_w} , T_m )
 $$
 
-Assuming that an high number of particles is involved in the computation and that the $f$ complexity requires a significant time, both the PipeFarm and the MapReduce solutions are theoretically equivalent.
-The communication needed in between the stages in the pipeline solution and the effort needed to generate a stream from a collection could produce a consistent overhead not present in the data parallel solution, so the data parallel solution is favorable and it's been chosen for the subsequent implementation.
+Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the MapReduce solutions are theoretically equivalent.
+The communication needed between the stages in the pipeline solution and the effort needed to generate a stream from a collection could produce a consistent overhead not present in the data-parallel solution that, for this reason, is favorable and it's been chosen for the subsequent implementation.
 
 # Implementation details
 
-The problem is modelled using two data structures described in the `spo.hpp` file:
+The problem is modeled using two data structures described in the `spo.hpp` file:
 
-- `result_t` stores the coordinates of a certain point and the value of the user provided function in the same point.
-- `particle_t` keeps track of the velocity of a particle other than the results obtained in the current and in the local minimum positions.
+- `result_t` stores the coordinates of a certain point and the value of the user-provided function in the same point.
+- `particle_t` keeps track of the velocity of a particle other than the results obtained in the current and the local minimum positions.
 
 The set of particles is stored in an array of structures.
-Because the same worker needs to read and write different members of the same particle there is no use for a structures of array solution that, without evident performance advantages, only breaks data encapsulation.
+Because the same worker needs to read and write different members of the same particle there is no use for a structures-of-array solution that, without evident performance advantages, only breaks data encapsulation.
 
-To update the particle set is used a lambda function that sequentially applies all the operations needed to compute the current velocity, position, value and local minimum.
+To update the particle set is used a lambda function that sequentially applies all the operations needed to compute the current velocity, position, value, and local minimum.
 The function chosen to be minimized is the following:
 
 $$
 f(x,y) = \int_x^y \sin(t) dt
 $$
 
-The function presents a unique global minimum in the interval $x,y \in \left[ 0, 4 \right]$ and is complexity can be arbitrarily adjusted by setting the precision of the Riemann sum used to approximate it.
+The function presents a unique global minimum in the interval $x,y \in \left[ 0, 4 \right]$ and is time complexity can be arbitrarily adjusted by setting the precision of the Riemann sum used to approximate it.
 
 Given the report readable in the appendix generated by the GNU compiler using the `-fopt-info-vec-all` not all the for loops can be vectorized:
 
 - The update of the velocity can't be vectorized due to the random number generation; even storing in an external vector the result of the random generation before the loop doesn't produce vectorization because of the "loop costings not worthwhile", as g++ notified.
-- No issues appear in the vectorization of the computation of the position, but the control of the boundaries of the space isn't vectorizable due to the internal loops;
-both the internal loops haven't got a fixed number of iterations, and each iteration depends on the precedent one, no these aren't vectorizable either.
+- No issues appear in the vectorization of the computation of the position, but the control of the boundaries of the space isn't vectorizable due to internal loops without a fixed number of iterations.
 
 The implementation of the combination of map and reduce is in the `mapreduce.hpp` file.
-The class *MapReduce* uses a thread pool initialized in the construction phase and reused in all the subsequent calls, this behaviour avoids the expensive creation of one or more threads in each iteration.
+The class *MapReduce* uses a thread pool initialized in the construction phase and reused in all the subsequent calls, this behavior avoids the expensive creation of one or more threads in each iteration.
 Each thread is responsible for the computation of a certain fixed size chunk in the input collection of particles, for each element it applies the provided elemental function and computes a local reduction.
 The result of this local reduction is pushed inside a queue where the main thread pops from to conclude the reduce phase.
  
-The main is used to merge the business logic and the parallelization mechanism, depending on the $n_w$ provided it can compute the swarm particle optimization in a sequential way ( $n_w = 0$ ), or in parallel using the mapreduce or the FastFlow approach.
+`main.cpp` is used to merge the business logic and the parallelization mechanism, depending on the $n_w$ provided it can sequentially compute the swarm particle optimization ( $n_w = 0$ ), or in parallel using the map-reduce or the FastFlow approach.
 
-The FastFlow solution uses the `ParallelForReduce` class to instantiate an $n_w$ number of threads and reuse them to map the *update* function to all the particles and subsequently to obtain the global minimum via reduction of the local minimums.
-As in the C++ threads solutions the map and the local reduction are executed sequentially.
+The FastFlow solution uses the `ParallelForReduce` class to instantiate $n_w$ threads and reuse them to map the update function to all the particles and subsequently to obtain the global minimum via reduction of the local minimums.
+As in the C++ threads solution, the map and the local reduction are executed sequentially.
 
-Both the queues used for the communication between the main thread and the workers of the thread pool, and the class used to take times are the *standard* ones used for the PDS course.
+Both the queues used for the communication between threads and the class used to monitor times are the "standard" ones used for the PDS course.
 Those are respectively in the `queue.hpp` and `utimer.hpp` files.
 
 After setting the variable `$FF_ROOT` to the FastFlow current path in the Makefile, the project is compilable using the command: `make spo`.
 The utility `autotime.sh` can be used to keep track of the times of an experiment executing the `spo` software with an increasing number of workers and storing the results in a dedicated folder.
-Without adding redundant informations to this report is possible to see the required argument list by calling both `spo` and `autotime.sh` without any argument.
+Without adding redundant information to this report is possible to see the required argument list by calling both `spo` and `autotime.sh` without any argument.
 
 # Experimental results
 
@@ -169,4 +168,3 @@ main.cpp:105:28: missed: not vectorized: number of iterations cannot be computed
 main.cpp:108:28: missed: couldn't vectorize loop
 main.cpp:108:28: missed: not vectorized: number of iterations cannot be computed.
 ```
-
