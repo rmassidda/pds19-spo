@@ -1,14 +1,13 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 max_nw directory"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 directory"
     exit
 fi
 
-MAXNW=$1
-DIR=$2
+DIR=$1
 
 rm -f $DIR/*.png
-cat $DIR/ff $DIR/cpp | ./plot $MAXNW
+cat $DIR/ff $DIR/cpp | ./plot
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
