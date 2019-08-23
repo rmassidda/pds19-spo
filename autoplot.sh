@@ -7,7 +7,7 @@ fi
 
 DIR=$1
 
-./plot $DIR/ff $DIR/cpp
+./plot $DIR/cpp $DIR/ff
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
 mv Efficiency.png $DIR/efficiency.png
