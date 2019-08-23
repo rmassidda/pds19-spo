@@ -5,7 +5,7 @@ from matplotlib.pyplot import figure
 import numpy as np
 import sys
 
-marker = [ '--', ':' ]
+marker = [ '-', ':', '-^', ':^' ]
 
 class Experiment:
     def __init__(self, name):
@@ -50,7 +50,8 @@ def plot ( name, exp ):
         else:
             arr = None
         x = np.array ( range ( len ( arr ) ) )
-        plt.plot( x, arr, marker[index], color='black', label=e.name)
+        m_on = [i for i in range(len(x)) if i%10==0]
+        plt.plot( x, arr, marker[index], color='black', label=e.name, markevery=m_on )
         for t in arr:
             max_y = max ( t, max_y )
         max_x = max ( max_x, len ( arr ) )
@@ -74,7 +75,7 @@ exp = []
 # Read experiments
 for file_path in sys.argv[1:]:
     with open(file_path) as file:
-        e = Experiment ( file_path )
+        e = Experiment ( file_path[:-4] )
         for line in file:
             parts = line.split()
             e.times.append ( int ( parts[3] ) )
