@@ -7,7 +7,7 @@ fi
 
 DIR=$1
 
-./plot $DIR/cpp.rst $DIR/ff.rst
+./plot $DIR/map-reduce.rst $DIR/FastFlow.rst
 mv Scalability.png $DIR/scalability.png
 mv Speedup.png $DIR/speedup.png
 mv Efficiency.png $DIR/efficiency.png

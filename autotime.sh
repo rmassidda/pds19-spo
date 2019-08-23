@@ -23,6 +23,6 @@ compute () {
 }
 
 echo "Computing C++ threads solution"
-compute 2>$PREFIX/$DIR/cpp.rst
+compute 2>$PREFIX/$DIR/map-reduce.rst
 echo "Computing FastFlow solution"
-compute ff 2>$PREFIX/$DIR/ff.rst
+compute ff 2>$PREFIX/$DIR/FastFlow.rst
