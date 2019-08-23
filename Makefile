@@ -19,7 +19,7 @@ spo: $(SOURCE)
 
 dist: report
 	mkdir -p $(RELEASE)
-	cp $(SOURCE) report.pdf autotime.sh Makefile $(RELEASE)
+	cp -r experiment $(SOURCE) report.pdf autotime.sh Makefile $(RELEASE)
 	tar -cf $(RELEASE).tar $(RELEASE)
 	gzip $(RELEASE).tar
 	rm -rf $(RELEASE)
