@@ -38,7 +38,7 @@ $$
 Given that the global minimum is always the minimum of the local minimums of all the particles, it's possible to *reduce* the result from the updated particles using the following *combiner function*.
 
 $$
-min: \textrm{result} \times \textrm{result} \rightarrow \textrm{result}
+\min: \textrm{result} \times \textrm{result} \rightarrow \textrm{result}
 $$
 
 A two-phase reduction with a local reduction of a chunk and a global reduction for all the results is feasible because of the benefits of fusing map and reduce; this solution doesn't present *precision* problems because of the nature of the minimization operator, so it's possible to avoid a more complex and expensive tree-based reduction.
@@ -85,7 +85,7 @@ $$
 The performances of the proposed solutions are easily comparable in terms of completion time for each iteration.
 
 $$
-T_{\textrm{MapReduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + n_w * T_m 
+T_{\textrm{map-reduce}} = \frac{n}{n_w} ( T_v + T_p + T_f + 2 T_m ) + n_w * T_m 
 $$
 
 In the pipeline solution, the estimated service time leads to the completion time for a high $n$ value.
@@ -104,8 +104,12 @@ $$
 T_{\textrm{PipeFarm}} \approx n * \max ( T_v , T_p , \frac{T_f}{n_w} , T_m )
 $$
 
-Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the MapReduce solutions are theoretically equivalent.
-The communication needed between the stages in the pipeline solution and the effort needed to generate a stream from a collection could produce a consistent overhead not present in the data-parallel solution that, for this reason, is favorable and it's been chosen for the subsequent implementation.
+Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the map-reduce solutions are theoretically equivalent.
+
+However it has to be considered that the communication needed between the stages in the pipeline solution and the effort needed to generate a stream from a collection, could produce a consistent overhead not present in the data-parallel solution
+Furthermore the possible adjustments to mitigate the pipeline overhead problem, as the fusion of the stages, would lead to a normal form stream-parallel pattern that resembles the data-parallel proposed solution except for the requirement to generate a stream.
+
+For these reasons, the data-parallel solution is favorable and it's been chosen for the implementation phase.
 
 # Implementation details
 
