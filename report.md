@@ -107,7 +107,7 @@ $$
 Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the map-reduce solutions are theoretically equivalent.
 
 However it has to be considered that the communication needed between the stages in the pipeline solution and the effort needed to generate a stream from a collection, could produce a consistent overhead not present in the data-parallel solution
-Furthermore the possible adjustments to mitigate the pipeline overhead problem, as the fusion of the stages, would lead to a normal form stream-parallel pattern that resembles the data-parallel proposed solution except for the requirement to generate a stream.
+Furthermore the possible adjustments to mitigate the pipeline overhead problem, as the fusion of the faster stages, would lead to a normal form stream-parallel pattern that resembles the data-parallel proposed solution except for the requirement to generate a stream.
 
 For these reasons, the data-parallel solution is favorable and it's been chosen for the implementation phase.
 
@@ -185,31 +185,20 @@ All the raw data from the experiments and the plots that represents the comparis
 \begin{figure}[!htb]
   \includegraphics[width=\linewidth]{img/size_speedup.png}
   \caption{Same precision, different size}\label{fig:sizespeed}
-\end{figure}
-
-\begin{figure}[!htb]
   \includegraphics[width=\linewidth]{img/prec_speedup.png}
   \caption{Same size, different precision}\label{fig:precspeed}
 \end{figure}
 
 \begin{figure}[!htb]
-\minipage{0.5\textwidth}
-  \includegraphics[width=\linewidth]{img/sol_efficiency_size.png}
-\endminipage\hfill
-\minipage{0.5\textwidth}
-  \includegraphics[width=\linewidth]{img/sol_efficiency_prec.png}
-\endminipage
+\includegraphics[width=\linewidth]{img/sol_efficiency_size.png}
+\includegraphics[width=\linewidth]{img/sol_efficiency_prec.png}
 \caption{Efficiency comparison between FastFlow and the custom solution}
 \label{fig:efficiency}
 \end{figure}
 
 \begin{figure}[!htb]
-\minipage{0.5\textwidth}
-  \includegraphics[width=\linewidth]{img/sol_speedup_size.png}
-\endminipage\hfill
-\minipage{0.5\textwidth}
-  \includegraphics[width=\linewidth]{img/sol_speedup_prec.png}
-\endminipage
+\includegraphics[width=\linewidth]{img/sol_speedup_size.png}
+\includegraphics[width=\linewidth]{img/sol_speedup_prec.png}
 \caption{Speedup comparison between FastFlow and the custom solution}
 \label{fig:speedup}
 \end{figure}
