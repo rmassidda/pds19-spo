@@ -25,7 +25,8 @@ class MapReduce {
   // Thread Pool
   int nw;
   std::vector<std::unique_ptr<std::thread>> pool;
-  std::vector<Queue<int>> work_q;
+  std::vector<std::pair<int,int>> chunks;
+  Queue<int> work_q;
   Queue<T2> result_q;
 
   public:
@@ -40,16 +41,18 @@ class MapReduce {
     op ( op ),
     nw ( nw ),
     pool ( nw ),
-    work_q ( nw )
+    chunks ( nw )
   {
 
-    auto worker = [this] ( int id, int start, int end ) {
+    auto worker = [this] () {
       while ( true ) {
         // Pop the command
-        auto p = this->work_q[id].pop();
+        auto p = this->work_q.pop();
         if ( p == EOS ) {
           return;
         }
+        int start = chunks[p].first;
+        int end = chunks[p].second;
 
         T2 tmp = this->ref;
         for ( int i = start; i < end && i < this->n; i ++ ) {
@@ -66,7 +69,8 @@ class MapReduce {
       // Define responsability of the worker
       int start = i * chunk_size;
       int end = ( i + 1 ) * chunk_size;
-      pool[i] = std::make_unique<std::thread> ( worker, i, start, end );
+      chunks[i] = std::make_pair ( start, end );
+      pool[i] = std::make_unique<std::thread> ( worker );
     }
 
   }
@@ -76,7 +80,7 @@ class MapReduce {
     this->ref = ref;
     // Start threads
     for ( int i = 0; i < nw; i ++ ) {
-      work_q[i].push( GO );
+      work_q.push( i );
     }
     // Reduce
     for ( int i = 0; i < nw; i ++ ) {
@@ -88,7 +92,7 @@ class MapReduce {
   void stop () {
     // Stop threads
     for ( int i = 0; i < nw; i ++ ) {
-      work_q[i].push ( EOS );
+      work_q.push ( EOS );
     }
     for ( int i = 0; i < nw; i ++ ) {
       pool[i]->join ();
