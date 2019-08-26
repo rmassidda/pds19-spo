@@ -33,7 +33,8 @@ class MapReduce {
       std::vector<T1> * input,
       std::function<T2(T1&,const T2)> f,
       std::function<T2(T2,T2)> op,
-      int nw ) :
+      int nw,
+      bool affinity = false ) :
     input ( input ),
     n ( input->size() ),
     f ( f ),
@@ -59,6 +60,7 @@ class MapReduce {
       }
     };
 
+    int n_cores = std::thread::hardware_concurrency();
     // Size computed by each worker
     int chunk_size = n / nw;
     chunk_size = ( chunk_size == 0 ) ? n : chunk_size;
@@ -67,6 +69,12 @@ class MapReduce {
       int start = i * chunk_size;
       int end = ( i + 1 ) * chunk_size;
       pool[i] = std::make_unique<std::thread> ( worker, i, start, end );
+      if ( affinity ) {
+        cpu_set_t cpuset;
+        CPU_ZERO( &cpuset );
+        CPU_SET( i%n_cores, &cpuset );
+        pthread_setaffinity_np ( pool[i]->native_handle(), sizeof(cpu_set_t), &cpuset );
+      }
     }
 
   }
