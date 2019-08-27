@@ -144,7 +144,7 @@ Each worker is responsible for the computation of a certain fixed size chunk in 
 An alternative approach is to use a unique queue, used by the main thread to push the coordinates of a chunk to the workers.
 This solution is applicable via git using the command `git apply queue.patch`.
 
-By default the MapReduce constructor doesn't force the correlation between threads and cores, but this can be demanded by the user using an optional boolean argument when creating the object that provokes the constructor to call `pthread_setaffinity_np` for each thread.
+By default the MapReduce constructor forces the correlation between threads and cores, but this can be demanded by the user using an optional boolean argument when creating the object that provokes the constructor to call `pthread_setaffinity_np` for each thread.
  
 `main.cpp` is used to merge the business logic and the parallelization mechanism, depending on the $n_w$ provided it can sequentially compute the swarm particle optimization ( $n_w = 0$ ), or in parallel using the map-reduce or the FastFlow approach.
 
@@ -160,29 +160,35 @@ Without adding redundant information to this report is possible to see the requi
 
 # Experimental results
 
-The performance metrics are influenced by the three factors:
+The performance metrics are directly influenced by the three factors:
 
 - The number of particles involved in the optimization process
-- The number of iterations of the termination loop
 - The precision of the Riemann sum that increases the $t_f$ time and consequently the time needed to update the state of a particle.
+- The correlation between threads and cores
 
-Different experiments have been computed on the Xeon machine available for test, the more significant ones are described in the following table:
+Different experiments have been computed on the Xeon machine available for test\textsuperscript{(\ref{fig:experiments})}, both with the core's affinity enabled and without.
 
-| Codename | Particles | Iterations | Precision | Max Workers |
-|-|-|-|-|-|
-|big_p10|100000|100|0.1|128|
-|little_p10|1000|100|0.1|128|
-|little_p10000|1000|100|0.0001|128|
+\begin{figure}[!htb]
 
-A great effort to the speedup trend is given by the dimension of the particle set as is visible in figure \ref{fig:sizespeed}, where the two experiments share the same precision but the one with a biggest set has a significant smaller particle set.
+\begin{tabular}{l*{6}{c}r}
+Codename          & Particles & Iterations & Precision & Max Workers \\
+\hline
+big\_p10 &100000 &100 &0.1 &128 \\ 
+little\_p10 &1000 &100 &0.1 &128 \\ 
+little\_p10000 &1000 &100 &0.0001 &128 \\
+\end{tabular}
 
+\caption{Experiments}\label{fig:experiments}
+\end{figure}
+
+A great effort to the speedup trend is given by the dimension of the particle set as is visible in figure\textsuperscript{(\ref{fig:sizespeed})}, where the two experiments share the same precision but the one with a biggest set has a significant smaller particle set.
 The last two experiments used a little particle set ($10^3$) to compute the minimum of the definite integral.
-The time needed to update the state of a single particle, influenced by the Riemann sum precision, contributes consistently to improve the speedup trend as is visible in figure \ref{fig:precspeed}.
+The time needed to update the state of a single particle, influenced by the Riemann sum precision, contributes consistently to improve the speedup trend as is visible in figure\textsuperscript{(\ref{fig:precspeed})}.
 
-As a general trend the custom solution outperforms the `ParallelForReduce` method offered by FastFlow in all the different experiments, this is visible in figures \ref{fig:efficiency} and \ref{fig:speedup}.
+As a general trend the custom solution outperforms the `ParallelForReduce` method offered by FastFlow in all the different experiments, this is visible in figures\textsuperscript{(\ref{fig:efficiency})} and\textsuperscript{(\ref{fig:speedup})}.
 All the raw data from the experiments and the plots that represents the comparison of FastFlow and the custom solutions in terms of scalability, speedup and efficiency are stored in the `./experiment/` folder included in the archive.
 
-Applying the patch to change the number of queues used doesn't dramatically change the performance, nonetheless the patched version seems to perform worse than the one with a queue per worker \ref{fig:queues}.
+Applying the patch to change the number of queues used doesn't dramatically change the performance, nonetheless the patched version seems to perform worse than the one with a queue per worker\textsuperscript{(\ref{fig:queues})}.
 This should be caused by the high number of threads waiting on the same condition variable.
 
 \begin{figure}[!htb]
