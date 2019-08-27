@@ -12,11 +12,11 @@ NONCODE= experiment autotime.sh vectorization.log Makefile report.pdf queue.patc
 
 STYLE= --highlight-style=monochrome
 
-report: report.md report.yaml
-	pandoc ${STYLE} -o $@.pdf $^
-
 spo: $(SOURCE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $^ $(LDFLAGS)
+
+report: report.md report.yaml
+	pandoc ${STYLE} -o $@.pdf $^
 
 dist: report
 	mkdir -p $(RELEASE)
