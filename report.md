@@ -144,7 +144,7 @@ Each worker is responsible for the computation of a certain fixed size chunk in 
 An alternative approach is to use a unique queue, used by the main thread to push the coordinates of a chunk to the workers.
 This solution is applicable via git using the command `git apply queue.patch`.
 
-By default the MapReduce constructor forces the correlation between threads and cores, but this can be demanded by the user using an optional boolean argument when creating the object that provokes the constructor to call `pthread_setaffinity_np` for each thread.
+By default the MapReduce constructor doesn't force the correlation between threads and cores, but this can be demanded by the user at compile time using an optional boolean argument when creating the object that provokes the constructor to call `pthread_setaffinity_np` for each thread.
  
 `main.cpp` is used to merge the business logic and the parallelization mechanism, depending on the $n_w$ provided it can sequentially compute the swarm particle optimization ( $n_w = 0$ ), or in parallel using the map-reduce or the FastFlow approach.
 
@@ -162,11 +162,11 @@ Without adding redundant information to this report is possible to see the requi
 
 The performance metrics are directly influenced by the three factors:
 
-- The number of particles involved in the optimization process
 - The precision of the Riemann sum that increases the $t_f$ time and consequently the time needed to update the state of a particle.
+- The number of particles involved in the optimization process
 - The correlation between threads and cores
 
-Different experiments have been computed on the Xeon machine available for test\textsuperscript{(\ref{fig:experiments})}, both with the core's affinity enabled and without.
+Different experiments have been computed on the Xeon machine available for test\textsuperscript{(fig\ref{fig:experiments})}, all the raw data from the experiments are stored in the `./experiment/` folder included in the archive.
 
 \begin{figure}[!htb]
 
@@ -181,40 +181,55 @@ little\_p10000 &1000 &100 &0.0001 &128 \\
 \caption{Experiments}\label{fig:experiments}
 \end{figure}
 
-A great effort to the speedup trend is given by the dimension of the particle set as is visible in figure\textsuperscript{(\ref{fig:sizespeed})}, where the two experiments share the same precision but the one with a biggest set has a significant smaller particle set.
-The last two experiments used a little particle set ($10^3$) to compute the minimum of the definite integral.
-The time needed to update the state of a single particle, influenced by the Riemann sum precision, contributes consistently to improve the speedup trend as is visible in figure\textsuperscript{(\ref{fig:precspeed})}.
+## Precision
 
-As a general trend the custom solution outperforms the `ParallelForReduce` method offered by FastFlow in all the different experiments, this is visible in figures\textsuperscript{(\ref{fig:efficiency})} and\textsuperscript{(\ref{fig:speedup})}.
-All the raw data from the experiments and the plots that represents the comparison of FastFlow and the custom solutions in terms of scalability, speedup and efficiency are stored in the `./experiment/` folder included in the archive.
+By increasing the precision of the Riemann sum what is achieved is the reduction of the non-parallelizable serial fraction of the work, this according to the Amdahl's Law raises the theoretical speedup's upper boundary.
+The phenomena can be appreciated in the two experiments where a little particle set ($10^3$) is used to compute the minimum of the definite integral\textsuperscript{(fig\ref{fig:precision})}.
 
-Applying the patch to change the number of queues used doesn't dramatically change the performance, nonetheless the patched version seems to perform worse than the one with a queue per worker\textsuperscript{(\ref{fig:queues})}.
-This should be caused by the high number of threads waiting on the same condition variable.
+## Workload 
+
+The Gustafson's Law states that increasing the workload of an application influences the parallelizable serial fraction more than the non-parallelizable one.
+A practical application of this law can be observed by increasing the dimension of the particle set\textsuperscript{(fig\ref{fig:workload})}, where the two experiments share the same precision and the one with the biggest set has a significant better speedup trend.
+
+## FastFlow
+
+As a general trend the custom `map-reduce` solution outperforms the `ParallelForReduce` method offered by FastFlow in all the different experiments, this could be caused by additional work needed by the framework.
+Disabling the scheduling[^method] to make the FastFlow solution behave like the custom one doesn't seem to produce noticeable changes in term of performances.
+The biggest gap in the speedup trend is noticeable when the particle set is small \textsuperscript{(fig\ref{fig:workload})}, and this also afflicts the efficiency\textsuperscript{(fig\ref{fig:fastflow})}. 
+
+## Queues
+
+Applying the patch to change the number of queues used doesn't dramatically change the performance, nonetheless the patched version seems to perform worse than the one with a queue per worker\textsuperscript{(fig\ref{fig:queues})}.
+This difference should be caused by the high number of threads waiting on the same condition variable.
+
+## Affinity
+
+Generally binding each thread to a fixed core results in slightly better in performances than leaving the operating system the responsibility to assign them in a dynamic way.
+The gap is consistent when the number of workers is inferior to the number of physical threads of the machine \textsuperscript{(fig\ref{fig:affinity_trend})}.
+Given that each thread works always on the same chunk, there are cache's benefit in sticking the thread to a core reducing the memory faults and consequent accesses.
+
+Without the informations that the OS has on all the processes in execution on the machine and the usage esteem for each core in time, the relation thread-core can also produce unpredictable negative results, producing a less linear performance trend\textsuperscript{(fig\ref{fig:affinity_case})}.
 
 \begin{figure}[!htb]
-  \includegraphics[width=\linewidth]{img/size_speedup.png}
-  \caption{Same precision, different size}\label{fig:sizespeed}
-  \includegraphics[width=\linewidth]{img/prec_speedup.png}
-  \caption{Same size, different precision}\label{fig:precspeed}
+  \includegraphics[width=\linewidth]{img/precision.png}
+  \caption{Same size, different precision}\label{fig:precision}
+  \includegraphics[width=\linewidth]{img/workload.png}
+  \caption{Same precision, different size}\label{fig:workload}
 \end{figure}
 
 \begin{figure}[!htb]
-\includegraphics[width=\linewidth]{img/sol_efficiency_size.png}
-\includegraphics[width=\linewidth]{img/sol_efficiency_prec.png}
-\caption{Efficiency comparison between FastFlow and the custom solution}
-\label{fig:efficiency}
+\includegraphics[width=\linewidth]{img/fastflow.png}
+\caption{Efficiency comparison between FastFlow and the custom solution}\label{fig:fastflow}
+\includegraphics[width=\linewidth]{img/queue.png}
+\caption{Same experiment, different communication}\label{fig:queues}
 \end{figure}
 
 \begin{figure}[!htb]
-\includegraphics[width=\linewidth]{img/sol_speedup_size.png}
-\includegraphics[width=\linewidth]{img/sol_speedup_prec.png}
-\caption{Speedup comparison between FastFlow and the custom solution}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}[!htb]
-  \includegraphics[width=\linewidth]{img/queue_number_scal.png}
-  \caption{Same experiment, different number of queues}\label{fig:queues}
+\includegraphics[width=\linewidth]{img/affinity_trend.png}
+\caption{General scalability trend with or without core affinity}\label{fig:affinity}
+\includegraphics[width=\linewidth]{img/affinity_case.png}
+\caption{Unpredictable jumps in the scalability trend}\label{fig:affinity_jump}
 \end{figure}
 
 [^vectorization_report]: A partial extract of the report can be found in the `vectorization.log` file.
+[^method]: `.disableScheduling()`
