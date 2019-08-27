@@ -34,7 +34,7 @@ class MapReduce {
       std::function<T2(T1&,const T2)> f,
       std::function<T2(T2,T2)> op,
       int nw,
-      bool affinity = true ) :
+      bool affinity = false ) :
     input ( input ),
     n ( input->size() ),
     f ( f ),
