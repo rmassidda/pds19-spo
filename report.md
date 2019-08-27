@@ -182,6 +182,9 @@ The time needed to update the state of a single particle, influenced by the Riem
 As a general trend the custom solution outperforms the `ParallelForReduce` method offered by FastFlow in all the different experiments, this is visible in figures \ref{fig:efficiency} and \ref{fig:speedup}.
 All the raw data from the experiments and the plots that represents the comparison of FastFlow and the custom solutions in terms of scalability, speedup and efficiency are stored in the `./experiment/` folder included in the archive.
 
+Applying the patch to change the number of queues used doesn't dramatically change the performance, nonetheless the patched version seems to perform worse than the one with a queue per worker \ref{fig:queues}.
+This should be caused by the high number of threads waiting on the same condition variable.
+
 \begin{figure}[!htb]
   \includegraphics[width=\linewidth]{img/size_speedup.png}
   \caption{Same precision, different size}\label{fig:sizespeed}
@@ -201,6 +204,11 @@ All the raw data from the experiments and the plots that represents the comparis
 \includegraphics[width=\linewidth]{img/sol_speedup_prec.png}
 \caption{Speedup comparison between FastFlow and the custom solution}
 \label{fig:speedup}
+\end{figure}
+
+\begin{figure}[!htb]
+  \includegraphics[width=\linewidth]{img/queue_number_scal.png}
+  \caption{Same experiment, different number of queues}\label{fig:queues}
 \end{figure}
 
 [^vectorization_report]: A partial extract of the report can be found in the `vectorization.log` file.
