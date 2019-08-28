@@ -15,7 +15,7 @@ void usage ( char * name ) {
   fprintf ( stderr, "\tseed\tused by the random number generator\n" );
   fprintf ( stderr, "\tn\tnumber of particles\n" );
   fprintf ( stderr, "\tm\tnumber of iterations\n" );
-  fprintf ( stderr, "\tp\tprecision in the riemann sum\n" );
+  fprintf ( stderr, "\tp\tprecision in the riemann sum (0.1, 0.01, ... )\n" );
   fprintf ( stderr, "\tn_w\tworkers 0=seq, >0=parallel\n" );
   fprintf ( stderr, "\tff\tuse fastflow framework\n" );
   exit ( EXIT_FAILURE );
