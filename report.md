@@ -14,8 +14,8 @@ while not termination:
       global_min = p.local_min
 ```
 
-The algorithm execution consists of several iterations determined by a certain termination condition, for the sake of simplicity this number consists of an integer provided by the user.
-Because of the constant and minimum contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in the implementation and this report.
+The algorithm approximates the minimum value of a real function $f$ via several iterations of the procedure that updates a set of particles, for the sake of simplicity the number of iterations $m$ is provided by the user.
+Because of the constant and minimum contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in the implementation or the report.
 
 ## General considerations
 
