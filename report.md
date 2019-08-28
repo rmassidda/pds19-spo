@@ -226,9 +226,9 @@ Without the informations that the OS has on all the processes in execution on th
 
 \begin{figure}[!htb]
 \includegraphics[width=\linewidth]{img/affinity_trend.png}
-\caption{General scalability trend with or without core affinity}\label{fig:affinity}
+\caption{General scalability trend with or without core affinity}\label{fig:affinity_trend}
 \includegraphics[width=\linewidth]{img/affinity_case.png}
-\caption{Unpredictable jumps in the scalability trend}\label{fig:affinity_jump}
+\caption{Unpredictable jumps in the scalability trend}\label{fig:affinity_case}
 \end{figure}
 
 [^vectorization_report]: A partial extract of the report can be found in the `vectorization.log` file.
