@@ -14,14 +14,13 @@ while not termination:
       global_min = p.local_min
 ```
 
-The algorithm approximates the minimum value of a real function $f$ via several iterations of the procedure that updates a set of particles, for the sake of simplicity the number of iterations $m$ is provided by the user.
-Because of the constant and minimum contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in the implementation or the report.
+The algorithm approximates the minimum value of a real function $f$ via several iterations of a procedure that updates a set of particles, for the sake of simplicity the number of iterations $m$ is provided by the user.
+Because of the constant contribution to the performance, the parallelization of the work needed to compute the initial state of the system has not been addressed in the implementation or the report.
 
 ## General considerations
 
-Each iteration computes a candidate to be the global minimum of a certain real function; the computation depends on the result of the previous states, so a **barrier** between subsequent iterations must exist to ensure soundness.
-
-The computation of the movement and the value of the function in a certain point is *embarrassing parallel* because of the independence of the particles. 
+Each iteration computes a candidate to be the global minimum of a certain real function, the result depends on the previous candidate, so iteration computations must be serialized;
+the update of the particles' internal state is instead embarrassing parallel because of their independence.
 
 The vector nature of the problem, given by the position and the speed of an object in a multidimensional space, is prone to the use of **vectorization** to parallelize the computation in independent dimensions.
 
@@ -29,38 +28,37 @@ The vector nature of the problem, given by the position and the speed of an obje
 
 A possible approach is to combine the **map** and the **reduce** high-order functions to parallelize the computation of a state.
 
-The elemental function $el$ given to the *map* should take a particle and the current global minimum, update the particle internal state and return a reference to the local minimum.
+The elemental function $el$ used by the map should take a particle and, given the previous global minimum candidate, update the particle internal state and return a reference to its local minimum.
 
 $$
-\textrm{el}: \textrm{particle} \times \textrm{result} \rightarrow \textrm{result}
+\textrm{el}_{glbmin}: \textrm{particle} \rightarrow \textrm{result}
 $$
 
-Given that the global minimum is always the minimum of the local minimums of all the particles, it's possible to *reduce* the result from the updated particles using the following *combiner function*.
+Given that the global minimum is always the minimum of the local minimums of all the particles, it's possible to reduce the result from the updated particles using the following combiner function.
 
 $$
 \min: \textrm{result} \times \textrm{result} \rightarrow \textrm{result}
 $$
 
-A two-phase reduction with a local reduction of a chunk and a global reduction for all the results is feasible because of the benefits of fusing map and reduce; this solution doesn't present *precision* problems because of the nature of the minimization operator, so it's possible to avoid a more complex and expensive tree-based reduction.
+A two-phase reduction with a local reduction of a chunk and a global reduction for all the results is feasible because of the benefits of fusing map and reduce like avoiding the need for synchronization;
+this solution doesn't present precision problems because of the nature of the minimization operator, so it's possible to avoid a more complex and expensive tree-based reduction.
 
 ![](img/mapreduce.png)
 
 ## Stream parallel solution
 
-Identifying the data dependencies allows a *functional deconstruction* of the body of the loop:
+Identifying the data dependencies allows a functional deconstruction of the body of the loop:
 
 - the update of the local minimum of a particle depends on the result of the user-provided function
 - the computed value depends on the current position of the particle
 - the position depends on the current velocity
 - the velocity of a particle depends on the local and global minimum
 
-Given these functional dependencies, it could be possible to benefit from a *pipeline introduction* using a first stage capable to generate a stream from a collection.
+Given these functional dependencies, it could be possible to benefit from a pipeline introduction using a first stage capable to generate a stream from a collection.
 
 ![](img/pipe.png)
 
-Since the user-provided $f$ function can be arbitrarily complex its service time could easily become the bottleneck of the pipeline.
-The proof of this intuition and the evidence of other bottlenecks could emerge during the *profiling* phase after the implementation.
-The performance could benefit so from a farm introduction.
+Since the user-provided $f$ function can be arbitrarily complex its service time could easily become the bottleneck of the pipeline, the performance could benefit so from a farm introduction.
 
 ![](img/farm.png)
 
@@ -104,7 +102,7 @@ $$
 T_{\textrm{PipeFarm}} \approx n * \max ( T_v , T_p , \frac{T_f}{n_w} , T_m )
 $$
 
-Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the map-reduce solutions are theoretically equivalent.
+Assuming that a high number of particles is involved in the computation and that the $f$ complexity requires significant time, both the PipeFarm and the map-reduce solutions are practically equivalent.
 
 However it has to be considered that the communication needed between the stages in the pipeline solution and the effort needed to generate a stream from a collection, could produce a consistent overhead not present in the data-parallel solution
 Furthermore the possible adjustments to mitigate the pipeline overhead problem, as the fusion of the faster stages, would lead to a normal form stream-parallel pattern that resembles the data-parallel proposed solution except for the requirement to generate a stream.
