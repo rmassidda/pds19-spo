@@ -160,7 +160,7 @@ int main ( int argc, char ** argv ) {
     ff::ParallelForReduce<result_t> pfr(nw);
     for ( int i = 0; i < n_iter; i ++ ) {
       result_t ref = glb_min;
-      pfr.parallel_reduce ( glb_min, ref, 0, n,
+      pfr.parallel_reduce ( glb_min, ref, 0, n,// 1, 1000,
         [&](const long j, result_t &glb_min){
           update ( p[j], ref );
           glb_min = op ( glb_min, p[j].loc );
