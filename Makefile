@@ -8,7 +8,7 @@ OPTFLAGS        = -O3 -finline-functions #-fopt-info-vec-all
 
 SOURCE = mapreduce.hpp spo.hpp utimer.hpp queue.hpp main.cpp
 RELEASE = spo-530766
-NONCODE= experiment autotime.sh vectorization.log Makefile report.pdf queue.patch
+NONCODE= experiment autotime.sh vectorization.log Makefile queue.patch
 
 STYLE= --highlight-style=monochrome
 
