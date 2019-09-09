@@ -142,7 +142,7 @@ Also by default the `MapReduce` constructor doesn't force the correlation betwee
 ## FastFlow
 
 The FastFlow solution uses the `ParallelForReduce` class to instantiate $n_w$ threads and reuse them to map the update function to all the particles and subsequently to obtain the global minimum via reduction of the local minimums.
-As in the C++ threads solution, the map and the local reduction are executed sequentially in the first local phase.
+As in the C++ threads solution, the map and the local reduction are executed sequentially in the first local phase and the scheduling policy is with a chunk size given by the number of particles divided by the number of active workers.
 
 # Experimental results
 
