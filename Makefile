@@ -16,7 +16,7 @@ spo: $(SOURCE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $^ $(LDFLAGS)
 
 report: report.md report.yaml
-	pandoc ${STYLE} -o $@.pdf $^
+	pandoc ${STYLE} -o $(RELEASE).pdf $^
 
 dist: report
 	mkdir -p $(RELEASE)
@@ -29,6 +29,6 @@ clean:
 	rm -rf $(RELEASE) $(RELEASE).tar.gz spo
 
 cleanall:
-	rm -rf report.pdf $(RELEASE) $(RELEASE).tar.gz spo
+	rm -rf $(RELEASE).pdf $(RELEASE) $(RELEASE).tar.gz spo
 
 .PHONY: dist clean cleanall
