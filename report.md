@@ -61,9 +61,6 @@ In the sequential case this takes:
 $$
 T_{\textrm{seq}} = n ( T_{v} + T_{p} + T_{f} + 2 T_{m} )
 $$
-
-## Comparison
-
 The performances of the proposed solutions are easily comparable in terms of completion time for each iteration.
 
 $$
@@ -92,7 +89,12 @@ However it has to be considered that the communication needed between the stages
 Furthermore the possible adjustments to mitigate the pipeline overhead problem, as the fusion of the faster stages, would lead to a normal form stream-parallel pattern that resembles the data-parallel proposed solution except for the extra requirement to generate a stream.
 Even in this scenario has to be considered that the update of the global minimum has to be done by locking the corresponding variable for each particle update, while in the data-parallel the same operation is lock-free.
 
-For these reasons, the data-parallel solution is favorable and it's been chosen for the implementation phase.
+For these reasons, the data-parallel solution is favorable and it's been chosen for the implementation phase. The expected performances are strictly dependent of the time complexity of the $f$ function to minimize, the greater the complexity the lower the serial fraction will be benefiting the speedup.
+
+\begin{figure}[!htb]
+\includegraphics[width=\linewidth]{img/ideal.png}
+\caption{Ideal speedup with different serial fractions and overhead linear to the number of workers}\label{fig:affinity_trend}
+\end{figure}
 
 # Implementation details
 

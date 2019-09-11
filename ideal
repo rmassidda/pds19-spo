@@ -1,0 +1,33 @@
+#! /bin/env python3
+import math
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
+import numpy as np
+import sys
+
+marker = [ '-', '--', ':' ]
+max_worker = 128
+
+def overhead ( nw ):
+    return nw*0.005;
+
+def speedup ( nw, sf ):
+    if nw == 0:
+        return 0
+    else:
+        return 1 / ( sf + (1-sf)*(1/nw) + overhead(nw) );
+
+plt.figure(num=None, figsize=(12,9))
+x = np.array ( range ( max_worker ) )
+
+# Read experiments
+i = 0
+for fraction in sys.argv[1:]:
+    sf = float ( fraction )
+    arr = np.array ( list ( map ( lambda t: speedup ( t, sf ), range(max_worker))))
+    plt.plot( x, arr, marker[i], color='black', label=fraction)
+    i = i + 1
+
+plt.xlabel('workers')
+plt.legend()
+plt.savefig('out'+'.png', bbox_inches="tight" )
