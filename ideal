@@ -9,13 +9,13 @@ marker = [ '-', '--', ':' ]
 max_worker = 128
 
 def overhead ( nw ):
-    return nw*0.005;
+    return nw*0.0001
 
 def speedup ( nw, sf ):
     if nw == 0:
         return 0
     else:
-        return 1 / ( sf + (1-sf)*(1/nw) + overhead(nw) );
+        return 1 / ( sf + (1-sf)*(1/nw) + overhead(nw) )
 
 plt.figure(num=None, figsize=(12,9))
 x = np.array ( range ( max_worker ) )
