@@ -94,8 +94,8 @@ Even in this scenario has to be considered that the update of the global minimum
 For these reasons, the data-parallel solution is favorable and it's been chosen for the implementation phase. The expected performances are strictly dependent on the time complexity of the $f$ function to minimize, the greater the complexity the lower the serial fraction. 
 
 \begin{figure}[!htb]
-\includegraphics[width=\linewidth]{img/ideal.png}
 \caption{Ideal speedup with different serial fractions and overhead linear to the number of workers}\label{fig:affinity_trend}
+\includegraphics[width=\linewidth]{img/ideal.png}
 \end{figure}
 
 # Implementation details
@@ -201,24 +201,24 @@ Given that each thread works always on the same chunk, there are cache's benefit
 Without the informations that the OS has on all the processes in execution on the machine and the time usage esteem for each core, the relation thread-core can also produce unpredictable negative results, producing a less smooth performance trend\textsuperscript{(fig\ref{fig:affinity_case})}.
 
 \begin{figure}[!htb]
-  \includegraphics[width=\linewidth]{img/precision.png}
   \caption{Same size, different precision}\label{fig:precision}
-  \includegraphics[width=\linewidth]{img/workload.png}
+  \includegraphics[width=\linewidth]{img/precision.png}
   \caption{Same precision, different size}\label{fig:workload}
+  \includegraphics[width=\linewidth]{img/workload.png}
 \end{figure}
 
 \begin{figure}[!htb]
-\includegraphics[width=\linewidth]{img/fastflow.png}
 \caption{Efficiency comparison between FastFlow and the custom solution}\label{fig:fastflow}
-\includegraphics[width=\linewidth]{img/queue.png}
+\includegraphics[width=\linewidth]{img/fastflow.png}
 \caption{Same experiment, different communication}\label{fig:queues}
+\includegraphics[width=\linewidth]{img/queue.png}
 \end{figure}
 
 \begin{figure}[!htb]
-\includegraphics[width=\linewidth]{img/affinity_trend.png}
 \caption{General scalability trend with or without core affinity}\label{fig:affinity_trend}
-\includegraphics[width=\linewidth]{img/affinity_case.png}
+\includegraphics[width=\linewidth]{img/affinity_trend.png}
 \caption{Unpredictable jumps in the scalability trend}\label{fig:affinity_case}
+\includegraphics[width=\linewidth]{img/affinity_case.png}
 \end{figure}
 
 [^vectorization_report]: A partial extract of the report can be found in the `vectorization.log` file.
